@@ -67,6 +67,7 @@ a:hover { text-decoration: underline; }
 img { max-width: 100%; }
 
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+@media (max-width: 680px) { .wrap { padding: 0 16px; } }
 .narrow { max-width: 800px; }
 
 .skip {
@@ -87,7 +88,10 @@ img { max-width: 100%; }
   display: flex; align-items: center; justify-content: space-between;
   gap: 24px; height: 60px;
 }
-.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--band-text); }
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  flex: 0 0 auto; color: var(--band-text);
+}
 .brand:hover { text-decoration: none; }
 .brand-mark {
   display: inline-grid; place-items: center;
@@ -98,14 +102,39 @@ img { max-width: 100%; }
 .brand-name { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
 .brand-name b { font-weight: 800; }
 
-.nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+/* One row, always. Narrow viewports scroll the nav sideways instead of
+   wrapping it below the bar. */
+.nav {
+  display: flex; align-items: center; gap: 4px;
+  flex-wrap: nowrap; min-width: 0;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.nav::-webkit-scrollbar { display: none; }
 .nav-link {
+  flex: 0 0 auto; white-space: nowrap;
   color: var(--band-muted); font-size: 14px; font-weight: 500;
   padding: 7px 11px; border-radius: 7px;
 }
 .nav-link:hover { color: var(--band-text); background: rgba(255,255,255,.07); text-decoration: none; }
 .nav-link.is-active { color: var(--band-text); background: rgba(255,255,255,.1); }
 .nav-ext::after { content: " \2197"; font-size: 11px; opacity: .7; }
+
+@media (max-width: 860px) {
+  .topbar-inner { gap: 12px; }
+  .nav { gap: 2px; }
+  .nav-link { padding: 7px 9px; }
+}
+@media (max-width: 680px) {
+  .brand-rest { display: none; }
+  .nav-link { font-size: 13px; padding: 7px 8px; }
+  /* Fade the right edge so it reads as scrollable rather than cut off. */
+  .nav {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+  }
+}
 
 /* ---------- hero ---------- */
 

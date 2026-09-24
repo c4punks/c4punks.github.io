@@ -40,6 +40,7 @@ run: site.wasm
 	$(WASMTIME) run -S preview2=y -S tcp=y -S inherit-network=y site.wasm
 
 export: site.wasm
+	rm -f $(OUT_DIR)/assets/css/app.*.css
 	$(WASMTIME) run -S preview2=y --dir $(OUT_DIR)::/out site.wasm --export /out
 
 clean:
