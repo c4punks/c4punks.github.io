@@ -1,3 +1,8 @@
 site/site.wasm
 site/templates.h
 site/fonts.h
+
+# CI working tree: the CWIST checkout and downloaded toolchains
+cwist/
+*.tar.gz
+*.tar.xz

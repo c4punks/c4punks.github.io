@@ -43,20 +43,22 @@ jobs:
         id: cwist
         run: echo "sha=$(git -C cwist rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      # Downloads land in the runner temp directory, never in the workspace,
+      # so they cannot be picked up by the commit step below.
       - name: Install the WASI SDK
         run: |
-          curl -sSL -o wasi-sdk.tar.gz \
+          curl -sSL -o "$RUNNER_TEMP/wasi-sdk.tar.gz" \
             "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VERSION%%.*}/wasi-sdk-${WASI_SDK_VERSION}-x86_64-linux.tar.gz"
           mkdir -p "$HOME/toolchains"
-          tar -xzf wasi-sdk.tar.gz -C "$HOME/toolchains"
+          tar -xzf "$RUNNER_TEMP/wasi-sdk.tar.gz" -C "$HOME/toolchains"
           echo "WASI_SDK=$HOME/toolchains/wasi-sdk-${WASI_SDK_VERSION}-x86_64-linux" >> "$GITHUB_ENV"
 
       - name: Install wasmtime
         run: |
-          curl -sSL -o wasmtime.tar.xz \
+          curl -sSL -o "$RUNNER_TEMP/wasmtime.tar.xz" \
             "https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz"
           mkdir -p "$HOME/toolchains"
-          tar -xJf wasmtime.tar.xz -C "$HOME/toolchains"
+          tar -xJf "$RUNNER_TEMP/wasmtime.tar.xz" -C "$HOME/toolchains"
           echo "WASMTIME=$HOME/toolchains/wasmtime-${WASMTIME_VERSION}-x86_64-linux/wasmtime" >> "$GITHUB_ENV"
 
       # The archive only changes when CWIST does, and building it from a cold
@@ -87,7 +89,10 @@ jobs:
         run: |
           git config user.name  'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -A ':!site'
+          # Stage only what the exporter writes. Anything else in the
+          # workspace belongs to the runner, not to the site.
+          git add -A -- index.html 404.html robots.txt sitemap.xml .nojekyll \
+                        about contribute guides projects assets
           if git diff --cached --quiet; then
             echo 'The export matches what is committed; nothing to do.'
             exit 0
