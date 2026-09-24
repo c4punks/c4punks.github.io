@@ -1,0 +1,123 @@
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Open source &middot; Systems software</p>
+    <h1>We write <em>C</em> that other people<br>can run in production.</h1>
+    <p class="lede">C 4 Punk Developers is an independent open-source group building
+    low-level infrastructure in plain C: a web framework, a deterministic runtime,
+    and the tooling around them. Everything is public, permissively licensed,
+    and built in the open.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/projects/">Browse the projects</a>
+      <a class="btn btn-ghost" href="{{ site.github }}" rel="noopener">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="stats">
+      {% for s in stats %}<div class="stat"><span class="n">{{ s.n }}</span><span class="l">{{ s.l }}</span></div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">What we build</p>
+      <h2>Two flagship projects, one engineering philosophy</h2>
+      <p>Both are written in plain C, link statically, vendor their dependencies,
+      and are designed to be read by the people who have to operate them.</p>
+    </div>
+    <div class="grid grid-2">
+      {% for p in projects %}
+      <article class="repo">
+        <div class="repo-head"><h3>{{ p.name }}</h3><span class="tag">{{ p.tag }}</span></div>
+        <p class="sub">{{ p.tagline }}</p>
+        <p>{{ p.summary }}</p>
+        <ul>{{ p.bullets_html }}</ul>
+        <div class="links">
+          <a href="{{ p.href }}">Project page &rarr;</a>
+          <a href="{{ p.repo }}" rel="noopener">Source &rarr;</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head center">
+      <p class="kicker">How we work</p>
+      <h2>Rules we hold ourselves to</h2>
+      <p>These are not slogans. They are the review criteria we apply to our own
+      pull requests.</p>
+    </div>
+    <div class="grid grid-3">
+      {% for v in principles %}
+      <div class="card">
+        <div class="card-icon">{{ v.mark }}</div>
+        <h3>{{ v.title }}</h3>
+        <p>{{ v.body }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div>
+        <p class="kicker">Start here</p>
+        <h2 style="margin:0 0 12px;font-size:clamp(1.6rem,3.2vw,2.1rem);font-weight:800;letter-spacing:-.025em;line-height:1.2">Five lines to a running server</h2>
+        <p style="color:var(--muted);margin:0 0 20px">CWIST is a normal C library. Install it, include one header,
+        register a route, and call listen. No code generation, no build plugin,
+        no runtime to deploy alongside it.</p>
+        <div class="links" style="display:flex;gap:16px;font-weight:600;font-size:.95rem">
+          <a href="/guides/cwist-getting-started/">Read the getting-started guide &rarr;</a>
+        </div>
+      </div>
+      <div>
+        <span class="code-label">main.c</span>
+        <pre><code>{{ hello_code }}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Guides</p>
+      <h2>Long-form, step-by-step walkthroughs</h2>
+      <p>Written the way we would want to be taught: every command, every file,
+      and what to expect on screen at each step.</p>
+    </div>
+    <div class="rows">
+      {% for g in guides %}
+      <a class="row" href="{{ g.href }}">
+        <h3>{{ g.title }}</h3>
+        <p>{{ g.summary }}</p>
+        <span class="meta">{{ g.project }} &middot; {{ g.minutes }} min read</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head center">
+      <p class="kicker">Get involved</p>
+      <h2>The group is open. So is the review queue.</h2>
+      <p>Issues, benchmarks, documentation fixes and hard bug reports are all
+      equally welcome. You do not need to ask permission to start.</p>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="/contribute/">How to contribute</a>
+      <a class="btn btn-ghost" href="{{ site.discord }}" rel="noopener">Join the Discord</a>
+    </div>
+  </div>
+</section>

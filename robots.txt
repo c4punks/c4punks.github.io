@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://c4punks.github.io/sitemap.xml

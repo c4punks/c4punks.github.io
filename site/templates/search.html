@@ -1,0 +1,9 @@
+<section class="section">
+  <div class="wrap">
+    <form class="searchbar" action="/search/" method="get" role="search">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search projects, guides and pages" aria-label="Search">
+      <button type="submit">Search</button>
+    </form>
+    {{ results_html }}
+  </div>
+</section>

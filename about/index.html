@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>About — C 4 Punk Developers</title>
+<meta name="description" content="About C 4 Punk Developers: an independent open-source group building systems software in C.">
+<link rel="canonical" href="https://c4punks.github.io/about/">
+<meta property="og:site_name" content="C 4 Punk Developers">
+<meta property="og:title" content="About — C 4 Punk Developers">
+<meta property="og:description" content="About C 4 Punk Developers: an independent open-source group building systems software in C.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4punks.github.io/about/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/assets/css/app.fb9e3354d1375f7c.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">C4</span>
+      <span class="brand-name"><b>C 4 Punk</b> Developers</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link" href="/guides/">Guides</a><a class="nav-link is-active" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="pagehead">
+  <div class="wrap">
+    <p class="kicker">About</p>
+    <h1>An independent group writing C</h1>
+    <p>Who we are, why we still write C, and how decisions get made.</p>
+    
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <article class="prose">
+      <h2>Who we are</h2><p>C 4 Punk Developers is a small, independent group of systems programmers. We build the parts of the stack that most teams would rather not think about: the HTTP server, the allocator, the scheduler, the reclamation strategy. We build them in C, we build them in public, and we ship them under permissive licences so that they can be used without a procurement conversation.</p><h2>Why C, in this decade</h2><p>The honest answer is control. When a service has to hold a predictable tail latency under load, the useful questions are about who owns a buffer, when it is reclaimed, and how many threads are parked waiting. C lets us answer those questions directly instead of arguing with a runtime about them. The cost is that we have to be disciplined, which is why our review rules are written down and applied to ourselves first.</p><p>We are not claiming C is the right choice for every project. We are claiming that if you have decided to write C, the surrounding ecosystem should be as good as anyone else's &mdash; a framework that routes and speaks modern protocols, a runtime that makes memory behaviour explicit, and documentation that reads like it was written for a person.</p><h2>What we publish</h2><p><strong>CWIST</strong> is a web framework and application server. It speaks HTTP/1.1, HTTP/2 and HTTP/3 over QUIC, plus WebSocket and WebTransport, with hybrid post-quantum TLS and an embedded SQLite ORM. It ships two request paths &mdash; a multiplexing reactor and a thread-per-connection pool &mdash; because those two shapes fail differently under load and the right answer depends on the workload.</p><p><strong>libttak</strong> is the deterministic systems runtime underneath it: generational arenas, epoch-based reclamation, detachable ownership, thread pools, a lattice scheduler and zero-copy IO. It exists because the usual C failure modes at scale &mdash; heap fragmentation, allocator contention, unstable tails &mdash; are not independent problems, and treating them as one system produces better behaviour than patching each in isolation.</p><h2>How decisions get made</h2><p>Proposals live in issues on the repository they affect. A change that alters public API or observable performance needs a written rationale and, where relevant, a measurement. Maintainers merge; anyone can review. There is no separate committee and no closed mailing list.</p><h2>Licensing</h2><p>Our code is Apache-2.0 unless a repository states otherwise; each repository carries its own <code>LICENSE</code> and, where third-party code is vendored, a <code>NOTICE</code> naming it. Check the repository you are about to depend on rather than trusting this paragraph.</p><h2>Talking to us</h2><p>Bug reports and questions belong in the issue tracker of the relevant repository, where they stay searchable. For faster back-and-forth there is a Discord. Security reports should go to the maintainers privately first; each repository documents how.</p>
+    </article>
+  </div>
+</section>
+
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>C 4 Punk Developers</h4>
+        <p>An independent open-source group writing systems software in C. We publish everything we build, and we keep the measurements honest.</p>
+      </div>
+      <div>
+        <h4>Projects</h4>
+        <ul>
+          <li><a href="/projects/cwist/">CWIST</a></li>
+          <li><a href="/projects/libttak/">libttak</a></li>
+          <li><a href="/projects/">All projects</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/search/">Search</a></li>
+          <li><a href="/about/">About us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li>
+          <li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li>
+          <li><a href="/contribute/">Contribute</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
+      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

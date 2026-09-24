@@ -1,0 +1,36 @@
+<section class="section">
+  <div class="wrap">
+    <div class="grid grid-2">
+      {% for p in projects %}
+      <article class="repo">
+        <div class="repo-head"><h3>{{ p.name }}</h3><span class="tag">{{ p.tag }}</span></div>
+        <p class="sub">{{ p.tagline }}</p>
+        <p>{{ p.summary }}</p>
+        <ul>{{ p.bullets_html }}</ul>
+        <div class="links">
+          <a href="{{ p.href }}">Project page &rarr;</a>
+          <a href="{{ p.repo }}" rel="noopener">Source &rarr;</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Also maintained</p>
+      <h2>Smaller repositories</h2>
+      <p>Supporting work that lives in the same organisation.</p>
+    </div>
+    <div class="grid grid-3">
+      {% for r in satellites %}
+      <div class="card">
+        <h3>{{ r.name }}</h3>
+        <p>{{ r.body }}</p>
+        <a class="more" href="{{ r.repo }}" rel="noopener">Source &rarr;</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

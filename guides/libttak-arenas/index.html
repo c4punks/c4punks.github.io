@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Deterministic memory with libttak arenas — C 4 Punk Developers</title>
+<meta name="description" content="Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.">
+<link rel="canonical" href="https://c4punks.github.io/guides/libttak-arenas/">
+<meta property="og:site_name" content="C 4 Punk Developers">
+<meta property="og:title" content="Deterministic memory with libttak arenas — C 4 Punk Developers">
+<meta property="og:description" content="Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4punks.github.io/guides/libttak-arenas/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/assets/css/app.fb9e3354d1375f7c.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">C4</span>
+      <span class="brand-name"><b>C 4 Punk</b> Developers</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="pagehead">
+  <div class="wrap">
+    <p class="kicker">libttak guide · Intermediate · 11 min read</p>
+    <h1>Deterministic memory with libttak arenas</h1>
+    <p>Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.</p>
+    
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <article class="prose">
+      <h2>The problem this solves</h2><p>A long-running C service that allocates per request will eventually fragment its heap and contend on its allocator. Both show up as an unstable tail: most requests are fine, and the slow ones are slow for reasons that do not appear in a profile taken at a calm moment.</p><p>Arenas change the shape of the problem. Instead of freeing each object where it happens to die, you declare a boundary &mdash; a request, a frame, a batch &mdash; and reclaim everything inside it at once.</p><h2>Step 1: set up an arena environment</h2><pre><code>#include &lt;ttak/mem/arena_helper.h&gt;
+
+ttak_arena_env_config_t cfg;
+ttak_arena_env_config_init(&amp;cfg);   /* defaults first */
+
+ttak_arena_env_t env;
+if (!ttak_arena_env_init(&amp;env, &amp;cfg)) {
+    /* allocation failed; nothing to destroy */
+    return -1;
+}</code></pre><p>The environment owns the backing memory and outlives every generation taken from it. Initialise the config struct through its <code>_init</code> function rather than zeroing it yourself, so that future fields get their intended defaults.</p><h2>Step 2: take a generation per unit of work</h2><pre><code>ttak_arena_generation_t gen;
+ttak_arena_generation_begin(&amp;env, &amp;gen, epoch_id);
+
+void *header = ttak_arena_generation_claim(&amp;env, &amp;gen, 512);
+void *body   = ttak_arena_generation_claim(&amp;env, &amp;gen, 8192);
+
+/* ... handle the request; nothing here calls free() ... */
+
+ttak_arena_generation_retire(&amp;env, &amp;gen);</code></pre><p><code>claim()</code> is a bump allocation and returns <code>NULL</code> when the generation cannot satisfy it, so check it like any allocator. <code>retire()</code> reclaims everything at once. Every pointer taken from the generation is dead the instant it returns &mdash; that is the contract, and it is also the whole benefit.</p><h2>Step 3: know how much room is left</h2><pre><code>size_t left = ttak_arena_generation_remaining(&amp;gen);
+if (left &lt; needed) {
+    /* retire early, or size the generation up at begin() */
+}</code></pre><p>If you want a generation reused rather than returned, <code>ttak_arena_generation_reset()</code> rewinds it without giving the memory back to the environment &mdash; useful for a loop that processes many small items.</p><h2>Step 4: rotate under steady load</h2><p><code>ttak_arena_env_rotate()</code> advances the environment so that retired generations become reusable. Call it at a natural quiet point &mdash; the end of a batch, a tick boundary &mdash; rather than on every request, since the point is to move cleanup to a moment you chose.</p><h2>Step 5: the cross-thread case</h2><p>Arenas answer the lifetime question inside one unit of work. When a structure is read by threads that are still inside it while another thread retires it, that is epoch reclamation's job instead:</p><pre><code>#include &lt;ttak/mem/epoch.h&gt;</code></pre><p>A reader enters an epoch, works, and leaves. A writer retires the old structure, and reclamation happens once no reader can still be holding it. There is no global pause and no stop-the-world phase; the cost is that reclamation is deferred rather than immediate.</p><h2>Step 6: hand ownership over explicitly</h2><p>When memory has to outlive the generation that produced it, libttak's detachable ownership makes that a deliberate call rather than a comment. Detaching is visible at the call site, which means a reviewer can answer "who frees this?" by reading the code in front of them.</p><h2>Rules of thumb</h2><ul><li>One generation per unit of work, retired on every path including the error path.</li><li>Never let an arena pointer escape the generation without detaching it.</li><li>Size the generation for the common case and handle the overflow explicitly; a failed claim is not an exceptional event.</li><li>Rotate at a boundary you chose, not on a timer you did not.</li></ul><h2>Summary</h2><p>Generational arenas turn per-object cleanup into a scheduled event, epoch reclamation covers the readers-while-retiring case, and detachable ownership keeps handover explicit. Together they are why libttak describes itself as deterministic rather than merely fast.</p>
+    </article>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head center">
+      <h2>Keep going</h2>
+      <p>Other guides from the same series.</p>
+    </div>
+    <div class="rows">
+      
+      <a class="row" href="/guides/cwist-getting-started/">
+        <h3>Building a web service with CWIST</h3>
+        <p>Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.</p>
+        <span class="meta">CWIST &middot; 12 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/cwist-server-modes/">
+        <h3>Choosing between the reactor and the classic pool</h3>
+        <p>Two request paths, two failure shapes. How to tell which one your workload wants, and how to read the latency distribution honestly.</p>
+        <span class="meta">CWIST &middot; 8 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/cwist-wasi/">
+        <h3>Running CWIST on WASI 0.2</h3>
+        <p>Compile a CWIST server to wasm32-wasip2 and serve it under wasmtime, with the guest owning its own accept loop.</p>
+        <span class="meta">CWIST &middot; 10 min read</span>
+      </a>
+      
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>C 4 Punk Developers</h4>
+        <p>An independent open-source group writing systems software in C. We publish everything we build, and we keep the measurements honest.</p>
+      </div>
+      <div>
+        <h4>Projects</h4>
+        <ul>
+          <li><a href="/projects/cwist/">CWIST</a></li>
+          <li><a href="/projects/libttak/">libttak</a></li>
+          <li><a href="/projects/">All projects</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/search/">Search</a></li>
+          <li><a href="/about/">About us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li>
+          <li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li>
+          <li><a href="/contribute/">Contribute</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
+      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

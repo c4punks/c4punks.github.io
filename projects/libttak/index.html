@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>libttak — C 4 Punk Developers</title>
+<meta name="description" content="Deterministic systems runtime for C. A low-level runtime focused on predictable memory behaviour, high-throughput concurrency and deterministic resource scheduling. It is what CWIST stands on, and it is usable on its own.">
+<link rel="canonical" href="https://c4punks.github.io/projects/libttak/">
+<meta property="og:site_name" content="C 4 Punk Developers">
+<meta property="og:title" content="libttak — C 4 Punk Developers">
+<meta property="og:description" content="Deterministic systems runtime for C. A low-level runtime focused on predictable memory behaviour, high-throughput concurrency and deterministic resource scheduling. It is what CWIST stands on, and it is usable on its own.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4punks.github.io/projects/libttak/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/assets/css/app.fb9e3354d1375f7c.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">C4</span>
+      <span class="brand-name"><b>C 4 Punk</b> Developers</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-link is-active" href="/projects/">Projects</a><a class="nav-link" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="pagehead">
+  <div class="wrap">
+    <p class="kicker">Project</p>
+    <h1>libttak</h1>
+    <p>Deterministic systems runtime for C</p>
+    <div class="links"><a href="https://github.com/c4punks/libttak" rel="noopener">Repository &rarr;</a><a href="/guides/">Guides &rarr;</a><a href="/contribute/">Contribute &rarr;</a></div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div class="prose">
+        <h2>Why libttak exists</h2><p>C applications tend to fail at scale in a small number of predictable ways: the heap fragments, the allocator contends, the tail latency stops being stable, async coordination becomes difficult to follow, and resource ownership drifts between subsystems until nobody can say who frees what.</p><p>libttak treats those as one problem rather than five. Memory allocation, network scheduling and concurrency are unified under deterministic control, so the lifetime of a buffer, the point at which it is reclaimed, and the thread that will touch it next are all answerable from the code in front of you.</p><h2>The memory model</h2><p><strong>Generational arenas</strong> batch allocations and reclaim them in bulk at a generation boundary you declare. Cleanup becomes an event you scheduled instead of a cost distributed across every free call.</p><p><strong>Epoch reclamation</strong> handles the cross-thread case: a writer can retire a structure while readers are still inside it, without stopping the world to do so.</p><p><strong>Detachable ownership</strong> makes the handover explicit. Memory moves between subsystems as a deliberate call, which is the difference between a lifetime bug you can find by reading and one you find in production.</p><h2>Concurrency and scheduling</h2><p>Thread pools take prioritised tasks and return futures. Underneath, a deterministic lattice scheduler orders work predictably rather than leaving it to whatever the OS decides this second. Zero-copy IO paths are aimed at lock-free ingress pipelines where an extra copy per packet is the whole budget.</p><h2>What is built on it</h2><p>libttak powers custom web frameworks &mdash; including CWIST &mdash; network routing layers, lock-free ingress pipelines, containerised services and experimental overlay networking. It is a library, not a framework: you call it from your own <code>main</code>.</p>
+      </div>
+      <div>
+        <span class="code-label">arena.c</span>
+        <pre><code>#include &lt;ttak/mem/arena_helper.h&gt;
+
+ttak_arena_env_config_t cfg;
+ttak_arena_env_config_init(&amp;cfg);
+
+ttak_arena_env_t env;
+ttak_arena_env_init(&amp;env, &amp;cfg);
+
+ttak_arena_generation_t gen;
+ttak_arena_generation_begin(&amp;env, &amp;gen, 1);
+
+void *buf = ttak_arena_generation_claim(&amp;env, &amp;gen, 4096);
+/* ... use buf for the whole request ... */
+
+ttak_arena_generation_retire(&amp;env, &amp;gen);
+ttak_arena_env_destroy(&amp;env);
+</code></pre>
+        <div class="card">
+          <h3>At a glance</h3>
+          <p>Deterministic runtime for C. Powers web frameworks, routing layers, lock-free ingress pipelines and containerised services. Documented at length in the companion libttak-books repository.</p>
+          <a class="more" href="https://github.com/c4punks/libttak" rel="noopener">Open the repository &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Capabilities</p>
+      <h2>What is in the box</h2>
+    </div>
+    <div class="grid grid-3">
+      
+      <div class="card">
+        <div class="card-icon">AR</div>
+        <h3>Generational arenas</h3>
+        <p>Batched allocation with timestamped generations and bulk reclamation, so cleanup happens at boundaries you chose rather than wherever the last free() landed.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">EP</div>
+        <h3>Epoch reclamation</h3>
+        <p>Cross-thread memory reclamation without a global pause, for structures that readers touch while writers retire them.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">OW</div>
+        <h3>Detachable ownership</h3>
+        <p>Memory can be handed between subsystems explicitly, which makes the lifetime question answerable by reading the call rather than the history.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">TP</div>
+        <h3>Thread pools and futures</h3>
+        <p>Prioritised task submission that returns a future, with a deterministic lattice scheduler underneath for predictable ordering.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">IO</div>
+        <h3>Zero-copy IO</h3>
+        <p>Ingress paths that avoid an intermediate copy, aimed at lock-free pipelines and routing layers.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">DS</div>
+        <h3>Container and math toolbox</h3>
+        <p>Hash tables, pools, ring buffers, trees, B+ trees, priority queues, bigint, matrix and NTT, with optional CUDA, OpenCL and ROCm acceleration.</p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Guides</p>
+      <h2>Learn libttak</h2>
+    </div>
+    <div class="rows">
+      
+      <a class="row" href="/guides/libttak-arenas/">
+        <h3>Deterministic memory with libttak arenas</h3>
+        <p>Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.</p>
+        <span class="meta">11 min read</span>
+      </a>
+      
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>C 4 Punk Developers</h4>
+        <p>An independent open-source group writing systems software in C. We publish everything we build, and we keep the measurements honest.</p>
+      </div>
+      <div>
+        <h4>Projects</h4>
+        <ul>
+          <li><a href="/projects/cwist/">CWIST</a></li>
+          <li><a href="/projects/libttak/">libttak</a></li>
+          <li><a href="/projects/">All projects</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/search/">Search</a></li>
+          <li><a href="/about/">About us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li>
+          <li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li>
+          <li><a href="/contribute/">Contribute</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
+      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

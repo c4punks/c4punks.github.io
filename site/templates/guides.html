@@ -1,0 +1,13 @@
+<section class="section">
+  <div class="wrap">
+    <div class="rows">
+      {% for g in guides %}
+      <a class="row" href="{{ g.href }}">
+        <h3>{{ g.title }}</h3>
+        <p>{{ g.summary }}</p>
+        <span class="meta">{{ g.project }} &middot; {{ g.level }} &middot; {{ g.minutes }} min read</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>

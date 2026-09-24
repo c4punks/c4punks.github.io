@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>C 4 Punk Developers — open-source systems software in C</title>
+<meta name="description" content="C 4 Punk Developers is an independent open-source group building systems software in C: CWIST, a web framework and application server, and libttak, a deterministic systems runtime.">
+<link rel="canonical" href="https://c4punks.github.io/">
+<meta property="og:site_name" content="C 4 Punk Developers">
+<meta property="og:title" content="C 4 Punk Developers — open-source systems software in C">
+<meta property="og:description" content="C 4 Punk Developers is an independent open-source group building systems software in C: CWIST, a web framework and application server, and libttak, a deterministic systems runtime.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4punks.github.io/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/assets/css/app.fb9e3354d1375f7c.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">C4</span>
+      <span class="brand-name"><b>C 4 Punk</b> Developers</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Open source &middot; Systems software</p>
+    <h1>We write <em>C</em> that other people<br>can run in production.</h1>
+    <p class="lede">C 4 Punk Developers is an independent open-source group building
+    low-level infrastructure in plain C: a web framework, a deterministic runtime,
+    and the tooling around them. Everything is public, permissively licensed,
+    and built in the open.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/projects/">Browse the projects</a>
+      <a class="btn btn-ghost" href="https://github.com/c4punks" rel="noopener">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><span class="n">2</span><span class="l">flagship projects</span></div><div class="stat"><span class="n">C17</span><span class="l">language standard</span></div><div class="stat"><span class="n">Apache-2.0</span><span class="l">default licence</span></div><div class="stat"><span class="n">0</span><span class="l">runtime dependencies</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">What we build</p>
+      <h2>Two flagship projects, one engineering philosophy</h2>
+      <p>Both are written in plain C, link statically, vendor their dependencies,
+      and are designed to be read by the people who have to operate them.</p>
+    </div>
+    <div class="grid grid-2">
+      
+      <article class="repo">
+        <div class="repo-head"><h3>CWIST</h3><span class="tag">C17</span></div>
+        <p class="sub">C Web development Is Still Trustworthy</p>
+        <p>A web framework and application server written in plain C. It terminates modern protocols itself, embeds a database layer, and links statically into a single binary you can copy onto a machine.</p>
+        <ul><li>HTTP/1.1, HTTP/2, HTTP/3 (QUIC), WebSocket, WebTransport</li><li>Hybrid post-quantum TLS (X25519MLKEM768)</li><li>Embedded SQLite ORM, plus RDBMS auto-detection</li><li>Reactor and thread-per-connection modes</li><li>Builds for native targets and for wasm32-wasip2</li></ul>
+        <div class="links">
+          <a href="/projects/cwist/">Project page &rarr;</a>
+          <a href="https://github.com/c4punks/CWIST" rel="noopener">Source &rarr;</a>
+        </div>
+      </article>
+      
+      <article class="repo">
+        <div class="repo-head"><h3>libttak</h3><span class="tag">Runtime</span></div>
+        <p class="sub">Deterministic systems runtime for C</p>
+        <p>A low-level runtime focused on predictable memory behaviour, high-throughput concurrency and deterministic resource scheduling. It is what CWIST stands on, and it is usable on its own.</p>
+        <ul><li>Generational arenas with bulk reclamation</li><li>Epoch-based reclamation without global pauses</li><li>Detachable memory ownership</li><li>Thread pools, futures and a lattice scheduler</li><li>Zero-copy IO and a container toolbox</li></ul>
+        <div class="links">
+          <a href="/projects/libttak/">Project page &rarr;</a>
+          <a href="https://github.com/c4punks/libttak" rel="noopener">Source &rarr;</a>
+        </div>
+      </article>
+      
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head center">
+      <p class="kicker">How we work</p>
+      <h2>Rules we hold ourselves to</h2>
+      <p>These are not slogans. They are the review criteria we apply to our own
+      pull requests.</p>
+    </div>
+    <div class="grid grid-3">
+      
+      <div class="card">
+        <div class="card-icon">01</div>
+        <h3>Plain C, no hidden runtime</h3>
+        <p>Our libraries are C17 and link statically. There is no VM to install, no interpreter to ship next to your binary, and no code generator between you and the source you are reading.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">02</div>
+        <h3>Vendored dependencies</h3>
+        <p>A fresh checkout builds on a fresh machine. We vendor what we depend on so that a build does not become an archaeology exercise two years from now.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">03</div>
+        <h3>Determinism over averages</h3>
+        <p>Tail latency, allocation behaviour and resource ownership are designed first. An average throughput number hides exactly the failures that page somebody at three in the morning.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">04</div>
+        <h3>Benchmarks with their caveats attached</h3>
+        <p>We publish run conditions, commit hashes and the shape of the distribution, not only the headline number. Where a competitor wins, we say so in the same table.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">05</div>
+        <h3>Readable by whoever operates it</h3>
+        <p>Code is reviewed for whether an on-call engineer can follow it at speed. Clever wins that cost legibility do not get merged.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">06</div>
+        <h3>Public by default</h3>
+        <p>Design discussion, issues and roadmaps happen in the open repositories. There is no private fork where the real work happens.</p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div>
+        <p class="kicker">Start here</p>
+        <h2 style="margin:0 0 12px;font-size:clamp(1.6rem,3.2vw,2.1rem);font-weight:800;letter-spacing:-.025em;line-height:1.2">Five lines to a running server</h2>
+        <p style="color:var(--muted);margin:0 0 20px">CWIST is a normal C library. Install it, include one header,
+        register a route, and call listen. No code generation, no build plugin,
+        no runtime to deploy alongside it.</p>
+        <div class="links" style="display:flex;gap:16px;font-weight:600;font-size:.95rem">
+          <a href="/guides/cwist-getting-started/">Read the getting-started guide &rarr;</a>
+        </div>
+      </div>
+      <div>
+        <span class="code-label">main.c</span>
+        <pre><code>#include &lt;cwist/app.h&gt;
+
+static void hello(cwist_http_request *req,
+                  cwist_http_response *res) {
+    (void)req;
+    cwist_sstring_assign(res-&gt;body, "Hello from CWIST!");
+}
+
+int main(void) {
+    cwist_app *app = cwist_app_create();
+    cwist_app_get(app, "/", hello);
+    cwist_app_listen(app, 8080);
+    cwist_app_destroy(app);
+    return 0;
+}
+</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Guides</p>
+      <h2>Long-form, step-by-step walkthroughs</h2>
+      <p>Written the way we would want to be taught: every command, every file,
+      and what to expect on screen at each step.</p>
+    </div>
+    <div class="rows">
+      
+      <a class="row" href="/guides/cwist-getting-started/">
+        <h3>Building a web service with CWIST</h3>
+        <p>Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.</p>
+        <span class="meta">CWIST &middot; 12 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/cwist-server-modes/">
+        <h3>Choosing between the reactor and the classic pool</h3>
+        <p>Two request paths, two failure shapes. How to tell which one your workload wants, and how to read the latency distribution honestly.</p>
+        <span class="meta">CWIST &middot; 8 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/cwist-wasi/">
+        <h3>Running CWIST on WASI 0.2</h3>
+        <p>Compile a CWIST server to wasm32-wasip2 and serve it under wasmtime, with the guest owning its own accept loop.</p>
+        <span class="meta">CWIST &middot; 10 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/libttak-arenas/">
+        <h3>Deterministic memory with libttak arenas</h3>
+        <p>Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.</p>
+        <span class="meta">libttak &middot; 11 min read</span>
+      </a>
+      
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head center">
+      <p class="kicker">Get involved</p>
+      <h2>The group is open. So is the review queue.</h2>
+      <p>Issues, benchmarks, documentation fixes and hard bug reports are all
+      equally welcome. You do not need to ask permission to start.</p>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="/contribute/">How to contribute</a>
+      <a class="btn btn-ghost" href="https://discord.gg/6F8HDmNAPg" rel="noopener">Join the Discord</a>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>C 4 Punk Developers</h4>
+        <p>An independent open-source group writing systems software in C. We publish everything we build, and we keep the measurements honest.</p>
+      </div>
+      <div>
+        <h4>Projects</h4>
+        <ul>
+          <li><a href="/projects/cwist/">CWIST</a></li>
+          <li><a href="/projects/libttak/">libttak</a></li>
+          <li><a href="/projects/">All projects</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/search/">Search</a></li>
+          <li><a href="/about/">About us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li>
+          <li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li>
+          <li><a href="/contribute/">Contribute</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
+      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

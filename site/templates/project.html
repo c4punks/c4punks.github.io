@@ -1,0 +1,52 @@
+<section class="section">
+  <div class="wrap">
+    <div class="grid grid-2">
+      <div class="prose">
+        {{ body_html }}
+      </div>
+      <div>
+        <span class="code-label">{{ code_label }}</span>
+        <pre><code>{{ code }}</code></pre>
+        <div class="card">
+          <h3>At a glance</h3>
+          <p>{{ glance }}</p>
+          <a class="more" href="{{ repo }}" rel="noopener">Open the repository &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Capabilities</p>
+      <h2>What is in the box</h2>
+    </div>
+    <div class="grid grid-3">
+      {% for f in features %}
+      <div class="card">
+        <div class="card-icon">{{ f.mark }}</div>
+        <h3>{{ f.title }}</h3>
+        <p>{{ f.body }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker">Guides</p>
+      <h2>Learn {{ name }}</h2>
+    </div>
+    <div class="rows">
+      {% for g in guides %}
+      <a class="row" href="{{ g.href }}">
+        <h3>{{ g.title }}</h3>
+        <p>{{ g.summary }}</p>
+        <span class="meta">{{ g.minutes }} min read</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>

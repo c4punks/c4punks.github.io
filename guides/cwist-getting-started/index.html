@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Building a web service with CWIST — C 4 Punk Developers</title>
+<meta name="description" content="Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.">
+<link rel="canonical" href="https://c4punks.github.io/guides/cwist-getting-started/">
+<meta property="og:site_name" content="C 4 Punk Developers">
+<meta property="og:title" content="Building a web service with CWIST — C 4 Punk Developers">
+<meta property="og:description" content="Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4punks.github.io/guides/cwist-getting-started/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/assets/css/app.fb9e3354d1375f7c.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark">C4</span>
+      <span class="brand-name"><b>C 4 Punk</b> Developers</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="pagehead">
+  <div class="wrap">
+    <p class="kicker">CWIST guide · Beginner · 12 min read</p>
+    <h1>Building a web service with CWIST</h1>
+    <p>Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.</p>
+    
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <article class="prose">
+      <h2>What you will build</h2><p>A single statically linked binary that answers HTTP on port 8080, serves one HTML route and one JSON route, reads from an embedded SQLite database, and exposes metrics and a health check. No runtime is installed alongside it and no reverse proxy is required for it to start.</p><h2>What you will need</h2><ul><li>A C compiler with C17 support (GCC or Clang).</li><li><code>make</code>, <code>git</code> and about ten minutes.</li><li>Linux, macOS or a BSD. CWIST vendors BoringSSL, lsquic, libttak and SQLite3, so there is no dependency list to satisfy first.</li></ul><h2>Step 1: install CWIST</h2><p>Build from source:</p><pre><code>git clone https://github.com/c4punks/CWIST.git
+cd CWIST
+make
+sudo make install   # optional; PREFIX=/opt/cwist to relocate</code></pre><p>Or install the released build through Homebrew, on macOS or Linuxbrew:</p><pre><code>brew install c4punks/cwist/cwist</code></pre><p>Either path gives you <code>libcwist.a</code>, the public headers, the <code>cwist</code> CLI and <code>cwist.pc</code> pkg-config metadata.</p><h2>Step 2: the smallest server that works</h2><p>Create <code>main.c</code>:</p><pre><code>#include &lt;cwist/app.h&gt;
+
+static void hello(cwist_http_request *req, cwist_http_response *res) {
+    (void)req;
+    cwist_sstring_assign(res-&gt;body, "Hello from CWIST!");
+}
+
+int main(void) {
+    cwist_app *app = cwist_app_create();
+    cwist_app_get(app, "/", hello);
+    cwist_app_listen(app, 8080);
+    cwist_app_destroy(app);
+    return 0;
+}</code></pre><p>Three things are worth naming here. <code>cwist_app_create()</code> allocates the application and everything hanging off it. <code>cwist_app_get()</code> registers a handler for a method and path. <code>cwist_app_listen()</code> blocks and runs the accept loop, so anything you want configured must be configured before it.</p><h2>Step 3: compile and run</h2><pre><code>gcc -o server main.c -lcwist -lssl -lcrypto -lz -lzstd \
+    -lbrotlienc -lbrotlicommon -luriparser -lcjson -ldl -lpthread -lm
+./server</code></pre><p>If you installed with pkg-config metadata available, <code>gcc -o server main.c $(pkg-config --cflags --libs cwist)</code> does the same job. Then, from another terminal:</p><pre><code>curl -i http://localhost:8080/</code></pre><p>You should see <code>HTTP/1.1 200 OK</code> and the greeting. If the connection is refused, the process is not listening yet or port 8080 is already taken &mdash; change the argument to <code>cwist_app_listen()</code> and rebuild.</p><h2>Step 4: path parameters and query strings</h2><p>A route segment beginning with a colon becomes a path parameter, and both parameter maps are read the same way:</p><pre><code>static void greet(cwist_http_request *req, cwist_http_response *res) {
+    const char *name  = cwist_query_map_get(req-&gt;path_params, "name");
+    const char *style = cwist_query_map_get(req-&gt;query_params, "style");
+
+    char out[256];
+    snprintf(out, sizeof(out), "%s, %s",
+             style ? style : "Hello", name ? name : "stranger");
+    cwist_sstring_assign(res-&gt;body, out);
+}
+
+cwist_app_get(app, "/greet/:name", greet);</code></pre><p>Both getters return <code>NULL</code> when the key is absent, so check before you dereference. <code>/greet/ada?style=Hi</code> now answers <code>Hi, ada</code>.</p><h2>Step 5: answer with JSON</h2><p>CWIST links cJSON, so building a response body is ordinary cJSON work:</p><pre><code>#include &lt;cjson/cJSON.h&gt;
+
+static void status(cwist_http_request *req, cwist_http_response *res) {
+    (void)req;
+    cJSON *doc = cJSON_CreateObject();
+    cJSON_AddStringToObject(doc, "service", "demo");
+    cJSON_AddBoolToObject(doc, "ready", 1);
+
+    char *text = cJSON_PrintUnformatted(doc);
+    cwist_http_header_add(&amp;res-&gt;headers, "Content-Type",
+                          "application/json; charset=utf-8");
+    cwist_sstring_assign(res-&gt;body, text);
+
+    cJSON_free(text);
+    cJSON_Delete(doc);
+}</code></pre><p>Note the two frees. <code>cJSON_PrintUnformatted()</code> hands you an allocation, and the document itself is separate; <code>cwist_sstring_assign()</code> copies, so both can go once the body is set.</p><h2>Step 6: add a database and the operational endpoints</h2><p>Everything below is configuration on the app, and all of it has to happen before <code>cwist_app_listen()</code>:</p><pre><code>int main(void) {
+    cwist_app *app = cwist_app_create();
+
+    cwist_app_use_db(app, ":memory:");   /* or a file path */
+    cwist_app_use_pqc_layer(app, true);  /* hybrid PQ TLS */
+    cwist_app_enable_metrics(app);
+    cwist_app_enable_healthz(app);
+    cwist_app_auto_rdbms(app, 5432);     /* local PostgreSQL, if present */
+
+    cwist_app_get(app, "/", hello);
+    cwist_app_get(app, "/status", status);
+
+    cwist_app_listen(app, 8080);
+    cwist_app_destroy(app);
+    return 0;
+}</code></pre><p>Use <code>:memory:</code> while you are iterating and a file path when you want the data to survive a restart. <code>cwist_app_auto_rdbms()</code> looks for a PostgreSQL, MySQL or MariaDB on localhost and wires it up if it finds one; if there is nothing there, the call is a no-op rather than an error.</p><h2>Step 7: query the database</h2><pre><code>#include &lt;cwist/core/db/sql.h&gt;
+
+cwist_db *db = NULL;
+cwist_db_open(&amp;db, "app.sqlite");
+cwist_db_exec(db, "CREATE TABLE IF NOT EXISTS notes ("
+                  "id INTEGER PRIMARY KEY, body TEXT)");
+
+cJSON *rows = NULL;
+cwist_error_t err = cwist_db_query(db, "SELECT id, body FROM notes", &amp;rows);
+if (err.error.err_i16 == 0 &amp;&amp; rows) {
+    /* rows is a cJSON array of objects keyed by column name */
+    cJSON_Delete(rows);
+}</code></pre><p>Results come back as a cJSON array, one object per row keyed by column name, which means the same value can be serialised straight into a response or walked in C. You own the array; delete it when you are done.</p><h2>Step 8: choose a server mode before you measure</h2><p>The reactor is the default and takes the throughput. The classic thread-per-connection pool answers the median and p99 faster on our published runs. Switch with an environment variable:</p><pre><code>CWIST_C1M_MODE=0 ./server   # classic thread-per-connection pool
+./server                    # reactor (default)</code></pre><p>Measure both against your own workload before deciding. The separate guide on server modes explains what each one is optimising and how to read the distribution.</p><h2>Summary</h2><p>You have a single binary that routes, speaks JSON, reads a database and exposes health and metrics, with no runtime deployed beside it. From here, the WASI guide compiles this same source to wasm32-wasip2, and the libttak guide covers the memory model underneath.</p>
+    </article>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head center">
+      <h2>Keep going</h2>
+      <p>Other guides from the same series.</p>
+    </div>
+    <div class="rows">
+      
+      <a class="row" href="/guides/cwist-server-modes/">
+        <h3>Choosing between the reactor and the classic pool</h3>
+        <p>Two request paths, two failure shapes. How to tell which one your workload wants, and how to read the latency distribution honestly.</p>
+        <span class="meta">CWIST &middot; 8 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/cwist-wasi/">
+        <h3>Running CWIST on WASI 0.2</h3>
+        <p>Compile a CWIST server to wasm32-wasip2 and serve it under wasmtime, with the guest owning its own accept loop.</p>
+        <span class="meta">CWIST &middot; 10 min read</span>
+      </a>
+      
+      <a class="row" href="/guides/libttak-arenas/">
+        <h3>Deterministic memory with libttak arenas</h3>
+        <p>Replace per-object malloc and free with generational arenas, then add epoch reclamation for the cross-thread case.</p>
+        <span class="meta">libttak &middot; 11 min read</span>
+      </a>
+      
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>C 4 Punk Developers</h4>
+        <p>An independent open-source group writing systems software in C. We publish everything we build, and we keep the measurements honest.</p>
+      </div>
+      <div>
+        <h4>Projects</h4>
+        <ul>
+          <li><a href="/projects/cwist/">CWIST</a></li>
+          <li><a href="/projects/libttak/">libttak</a></li>
+          <li><a href="/projects/">All projects</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/search/">Search</a></li>
+          <li><a href="/about/">About us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li>
+          <li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li>
+          <li><a href="/contribute/">Contribute</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
+      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

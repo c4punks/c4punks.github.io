@@ -1,0 +1,24 @@
+<section class="section">
+  <div class="wrap">
+    <article class="prose">
+      {{ body_html }}
+    </article>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head center">
+      <h2>Keep going</h2>
+      <p>Other guides from the same series.</p>
+    </div>
+    <div class="rows">
+      {% for g in guides %}
+      <a class="row" href="{{ g.href }}">
+        <h3>{{ g.title }}</h3>
+        <p>{{ g.summary }}</p>
+        <span class="meta">{{ g.project }} &middot; {{ g.minutes }} min read</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
