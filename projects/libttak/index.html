@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/projects/libttak/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
+<link rel="stylesheet" href="/assets/css/app.82928bd1c9cd2f14.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <span class="brand-name"><b>C 4 Punk</b><span class="brand-rest"> Developers</span></span>
     </a>
     <nav class="nav" aria-label="Main">
-      <a class="nav-link is-active" href="/projects/">Projects</a><a class="nav-link" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link is-active" href="/projects/">Projects</a><a class="nav-link" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a>
       <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
     </nav>
   </div>
@@ -47,22 +47,22 @@
       </div>
       <div>
         <span class="code-label">arena.c</span>
-        <pre><code>#include &lt;ttak/mem/arena_helper.h&gt;
+        <pre><code class="lang-c"><span class="tok-p">#include</span> <span class="tok-s">&lt;ttak/mem/arena_helper.h&gt;</span>
 
-ttak_arena_env_config_t cfg;
-ttak_arena_env_config_init(&amp;cfg);
+<span class="tok-t">ttak_arena_env_config_t</span> cfg;
+<span class="tok-f">ttak_arena_env_config_init</span>(&amp;cfg);
 
-ttak_arena_env_t env;
-ttak_arena_env_init(&amp;env, &amp;cfg);
+<span class="tok-t">ttak_arena_env_t</span> env;
+<span class="tok-f">ttak_arena_env_init</span>(&amp;env, &amp;cfg);
 
-ttak_arena_generation_t gen;
-ttak_arena_generation_begin(&amp;env, &amp;gen, 1);
+<span class="tok-t">ttak_arena_generation_t</span> gen;
+<span class="tok-f">ttak_arena_generation_begin</span>(&amp;env, &amp;gen, <span class="tok-n">1</span>);
 
-void *buf = ttak_arena_generation_claim(&amp;env, &amp;gen, 4096);
-/* ... use buf for the whole request ... */
+<span class="tok-t">void</span> *buf = <span class="tok-f">ttak_arena_generation_claim</span>(&amp;env, &amp;gen, <span class="tok-n">4096</span>);
+<span class="tok-c">/* ... use buf for the whole request ... */</span>
 
-ttak_arena_generation_retire(&amp;env, &amp;gen);
-ttak_arena_env_destroy(&amp;env);
+<span class="tok-f">ttak_arena_generation_retire</span>(&amp;env, &amp;gen);
+<span class="tok-f">ttak_arena_env_destroy</span>(&amp;env);
 </code></pre>
         <div class="card">
           <h3>At a glance</h3>
@@ -163,8 +163,8 @@ ttak_arena_env_destroy(&amp;env);
         <h4>Learn</h4>
         <ul>
           <li><a href="/guides/">Guides</a></li>
-          <li><a href="/search/">Search</a></li>
           <li><a href="/about/">About us</a></li>
+          <li><a href="/projects/cwist/">CWIST guides</a></li>
         </ul>
       </div>
       <div>

@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/guides/libttak-arenas/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
+<link rel="stylesheet" href="/assets/css/app.82928bd1c9cd2f14.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <span class="brand-name"><b>C 4 Punk</b><span class="brand-rest"> Developers</span></span>
     </a>
     <nav class="nav" aria-label="Main">
-      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a>
       <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
     </nav>
   </div>
@@ -42,27 +42,27 @@
 <section class="section">
   <div class="wrap">
     <article class="prose">
-      <h2>The problem this solves</h2><p>A long-running C service that allocates per request will eventually fragment its heap and contend on its allocator. Both show up as an unstable tail: most requests are fine, and the slow ones are slow for reasons that do not appear in a profile taken at a calm moment.</p><p>Arenas change the shape of the problem. Instead of freeing each object where it happens to die, you declare a boundary (a request, a frame, a batch) and reclaim everything inside it at once.</p><h2>Step 1: set up an arena environment</h2><pre><code>#include &lt;ttak/mem/arena_helper.h&gt;
+      <h2>The problem this solves</h2><p>A long-running C service that allocates per request will eventually fragment its heap and contend on its allocator. Both show up as an unstable tail: most requests are fine, and the slow ones are slow for reasons that do not appear in a profile taken at a calm moment.</p><p>Arenas change the shape of the problem. Instead of freeing each object where it happens to die, you declare a boundary (a request, a frame, a batch) and reclaim everything inside it at once.</p><h2>Step 1: set up an arena environment</h2><pre><code class="lang-c"><span class="tok-p">#include</span> <span class="tok-s">&lt;ttak/mem/arena_helper.h&gt;</span>
 
-ttak_arena_env_config_t cfg;
-ttak_arena_env_config_init(&amp;cfg);   /* defaults first */
+<span class="tok-t">ttak_arena_env_config_t</span> cfg;
+<span class="tok-f">ttak_arena_env_config_init</span>(&amp;cfg);   <span class="tok-c">/* defaults first */</span>
 
-ttak_arena_env_t env;
-if (!ttak_arena_env_init(&amp;env, &amp;cfg)) {
-    /* allocation failed; nothing to destroy */
-    return -1;
-}</code></pre><p>The environment owns the backing memory and outlives every generation taken from it. Initialise the config struct through its <code>_init</code> function rather than zeroing it yourself, so that future fields get their intended defaults.</p><h2>Step 2: take a generation per unit of work</h2><pre><code>ttak_arena_generation_t gen;
-ttak_arena_generation_begin(&amp;env, &amp;gen, epoch_id);
+<span class="tok-t">ttak_arena_env_t</span> env;
+<span class="tok-k">if</span> (!<span class="tok-f">ttak_arena_env_init</span>(&amp;env, &amp;cfg)) {
+    <span class="tok-c">/* allocation failed; nothing to destroy */</span>
+    <span class="tok-k">return</span> -<span class="tok-n">1</span>;
+}</code></pre><p>The environment owns the backing memory and outlives every generation taken from it. Initialise the config struct through its <code>_init</code> function rather than zeroing it yourself, so that future fields get their intended defaults.</p><h2>Step 2: take a generation per unit of work</h2><pre><code class="lang-c"><span class="tok-t">ttak_arena_generation_t</span> gen;
+<span class="tok-f">ttak_arena_generation_begin</span>(&amp;env, &amp;gen, epoch_id);
 
-void *header = ttak_arena_generation_claim(&amp;env, &amp;gen, 512);
-void *body   = ttak_arena_generation_claim(&amp;env, &amp;gen, 8192);
+<span class="tok-t">void</span> *header = <span class="tok-f">ttak_arena_generation_claim</span>(&amp;env, &amp;gen, <span class="tok-n">512</span>);
+<span class="tok-t">void</span> *body   = <span class="tok-f">ttak_arena_generation_claim</span>(&amp;env, &amp;gen, <span class="tok-n">8192</span>);
 
-/* ... handle the request; nothing here calls free() ... */
+<span class="tok-c">/* ... handle the request; nothing here calls free() ... */</span>
 
-ttak_arena_generation_retire(&amp;env, &amp;gen);</code></pre><p><code>claim()</code> is a bump allocation and returns <code>NULL</code> when the generation cannot satisfy it, so check it like any allocator. <code>retire()</code> reclaims everything at once. Every pointer taken from the generation is dead the instant it returns That is the contract, and it is also the whole benefit.</p><h2>Step 3: know how much room is left</h2><pre><code>size_t left = ttak_arena_generation_remaining(&amp;gen);
-if (left &lt; needed) {
-    /* retire early, or size the generation up at begin() */
-}</code></pre><p>If you want a generation reused rather than returned, <code>ttak_arena_generation_reset()</code> rewinds it without giving the memory back to the environment, which is useful for a loop that processes many small items.</p><h2>Step 4: rotate under steady load</h2><p><code>ttak_arena_env_rotate()</code> advances the environment so that retired generations become reusable. Call it at a natural quiet point (the end of a batch, a tick boundary) rather than on every request, since the point is to move cleanup to a moment you chose.</p><h2>Step 5: the cross-thread case</h2><p>Arenas answer the lifetime question inside one unit of work. When a structure is read by threads that are still inside it while another thread retires it, that is epoch reclamation's job instead:</p><pre><code>#include &lt;ttak/mem/epoch.h&gt;</code></pre><p>A reader enters an epoch, works, and leaves. A writer retires the old structure, and reclamation happens once no reader can still be holding it. There is no global pause and no stop-the-world phase; the cost is that reclamation is deferred rather than immediate.</p><h2>Step 6: hand ownership over explicitly</h2><p>When memory has to outlive the generation that produced it, libttak's detachable ownership makes that a deliberate call rather than a comment. Detaching is visible at the call site, which means a reviewer can answer "who frees this?" by reading the code in front of them.</p><h2>Rules of thumb</h2><ul><li>One generation per unit of work, retired on every path including the error path.</li><li>Never let an arena pointer escape the generation without detaching it.</li><li>Size the generation for the common case and handle the overflow explicitly; a failed claim is not an exceptional event.</li><li>Rotate at a boundary you chose, not on a timer you did not.</li></ul><h2>Summary</h2><p>Generational arenas turn per-object cleanup into a scheduled event, epoch reclamation covers the readers-while-retiring case, and detachable ownership keeps handover explicit. Together they are why libttak describes itself as deterministic rather than merely fast.</p>
+<span class="tok-f">ttak_arena_generation_retire</span>(&amp;env, &amp;gen);</code></pre><p><code>claim()</code> is a bump allocation and returns <code>NULL</code> when the generation cannot satisfy it, so check it like any allocator. <code>retire()</code> reclaims everything at once. Every pointer taken from the generation is dead the instant it returns That is the contract, and it is also the whole benefit.</p><h2>Step 3: know how much room is left</h2><pre><code class="lang-c"><span class="tok-t">size_t</span> left = <span class="tok-f">ttak_arena_generation_remaining</span>(&amp;gen);
+<span class="tok-k">if</span> (left &lt; needed) {
+    <span class="tok-c">/* retire early, or size the generation up at begin() */</span>
+}</code></pre><p>If you want a generation reused rather than returned, <code>ttak_arena_generation_reset()</code> rewinds it without giving the memory back to the environment, which is useful for a loop that processes many small items.</p><h2>Step 4: rotate under steady load</h2><p><code>ttak_arena_env_rotate()</code> advances the environment so that retired generations become reusable. Call it at a natural quiet point (the end of a batch, a tick boundary) rather than on every request, since the point is to move cleanup to a moment you chose.</p><h2>Step 5: the cross-thread case</h2><p>Arenas answer the lifetime question inside one unit of work. When a structure is read by threads that are still inside it while another thread retires it, that is epoch reclamation's job instead:</p><pre><code class="lang-c"><span class="tok-p">#include</span> <span class="tok-s">&lt;ttak/mem/epoch.h&gt;</span></code></pre><p>A reader enters an epoch, works, and leaves. A writer retires the old structure, and reclamation happens once no reader can still be holding it. There is no global pause and no stop-the-world phase; the cost is that reclamation is deferred rather than immediate.</p><h2>Step 6: hand ownership over explicitly</h2><p>When memory has to outlive the generation that produced it, libttak's detachable ownership makes that a deliberate call rather than a comment. Detaching is visible at the call site, which means a reviewer can answer "who frees this?" by reading the code in front of them.</p><h2>Rules of thumb</h2><ul><li>One generation per unit of work, retired on every path including the error path.</li><li>Never let an arena pointer escape the generation without detaching it.</li><li>Size the generation for the common case and handle the overflow explicitly; a failed claim is not an exceptional event.</li><li>Rotate at a boundary you chose, not on a timer you did not.</li></ul><h2>Summary</h2><p>Generational arenas turn per-object cleanup into a scheduled event, epoch reclamation covers the readers-while-retiring case, and detachable ownership keeps handover explicit. Together they are why libttak describes itself as deterministic rather than merely fast.</p>
     </article>
   </div>
 </section>
@@ -116,8 +116,8 @@ if (left &lt; needed) {
         <h4>Learn</h4>
         <ul>
           <li><a href="/guides/">Guides</a></li>
-          <li><a href="/search/">Search</a></li>
           <li><a href="/about/">About us</a></li>
+          <li><a href="/projects/cwist/">CWIST guides</a></li>
         </ul>
       </div>
       <div>

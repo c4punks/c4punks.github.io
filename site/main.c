@@ -17,7 +17,6 @@
 #include <cwist/app.h>
 #include <cwist/core/template/template.h>
 #include <cwist/core/html/css_composer.h>
-#include <cwist/core/db/sql.h>
 #include <cwist/sys/app/assets.h>
 #include <cjson/cJSON.h>
 
@@ -31,13 +30,14 @@
 #include "content.h"
 #include "projects.h"
 #include "guides.h"
+#include "highlight.h"
+#include "fonts.h"
 #include "templates.h"
 
 #ifndef SITE_PORT
 #define SITE_PORT 8080
 #endif
 
-static cwist_db *g_db = NULL;
 static char g_css_url[256] = "/assets/css/app.css";
 
 /* -------------------------------------------------------------------------- */
@@ -54,17 +54,7 @@ static void s_appendf(cwist_sstring *s, const char *fmt, ...) {
     cwist_sstring_append(s, buf);
 }
 
-/** @brief Double every single quote so a value can sit inside an SQL literal. */
-static void sql_quote(const char *src, char *dst, size_t cap) {
-    size_t o = 0;
-    for (const char *p = src; *p && o + 2 < cap; p++) {
-        if (*p == '\'') dst[o++] = '\'';
-        dst[o++] = *p;
-    }
-    dst[o < cap ? o : cap - 1] = '\0';
-}
-
-/** @brief Copy text with HTML tags and entities removed, for the search index. */
+/** @brief Copy text with HTML tags and entities removed. */
 static void strip_markup(const char *src, char *dst, size_t cap) {
     size_t o = 0;
     bool in_tag = false;
@@ -79,22 +69,6 @@ static void strip_markup(const char *src, char *dst, size_t cap) {
             continue;
         }
         dst[o++] = *p;
-    }
-    dst[o] = '\0';
-}
-
-/** @brief Escape the five characters that matter inside HTML text or attributes. */
-static void html_escape(const char *src, char *dst, size_t cap) {
-    size_t o = 0;
-    for (const char *p = src; *p && o + 7 < cap; p++) {
-        switch (*p) {
-            case '&':  memcpy(dst + o, "&amp;", 5);  o += 5; break;
-            case '<':  memcpy(dst + o, "&lt;", 4);   o += 4; break;
-            case '>':  memcpy(dst + o, "&gt;", 4);   o += 4; break;
-            case '"':  memcpy(dst + o, "&quot;", 6); o += 6; break;
-            case '\'': memcpy(dst + o, "&#39;", 5);  o += 5; break;
-            default:   dst[o++] = *p; break;
-        }
     }
     dst[o] = '\0';
 }
@@ -179,8 +153,7 @@ static cJSON *base_context(const char *active) {
         { "/projects/",   "Projects"   },
         { "/guides/",     "Guides"     },
         { "/about/",      "About"      },
-        { "/contribute/", "Contribute" },
-        { "/search/",     "Search"     }
+        { "/contribute/", "Contribute" }
     };
 
     cJSON *ctx = cJSON_CreateObject();
@@ -315,10 +288,12 @@ static cwist_sstring *page_home(void) {
     cJSON_AddItemToObject(ctx, "principles",
         features_json(g_principles, sizeof(g_principles) / sizeof(g_principles[0])));
     cJSON_AddItemToObject(ctx, "guides", guides_json(NULL, NULL));
-    cJSON_AddStringToObject(ctx, "hello_code", g_cwist_code);
+    cwist_sstring *snippet = highlight_snippet(g_cwist_code, true);
+    cJSON_AddStringToObject(ctx, "hello_code", snippet->data);
 
     cwist_sstring *body = cwist_template_render(TPL_HOME_HTML, ctx);
     cJSON_Delete(ctx);
+    cwist_sstring_destroy(snippet);
     if (!body) return NULL;
 
     cwist_sstring *page = render_layout(
@@ -380,10 +355,13 @@ static cwist_sstring *page_project(const project_t *p) {
     snprintf(title, sizeof(title), "%s | %s", p->name, SITE_ORG);
     snprintf(desc, sizeof(desc), "%s. %s", p->tagline, p->summary);
 
+    cwist_sstring *lit = highlight_blocks(p->body_html);
+    cwist_sstring *snippet = highlight_snippet(p->code, true);
+
     cJSON *ctx = base_context("/projects/");
     cJSON_AddStringToObject(ctx, "name", p->name);
-    cJSON_AddStringToObject(ctx, "body_html", p->body_html);
-    cJSON_AddStringToObject(ctx, "code", p->code);
+    cJSON_AddStringToObject(ctx, "body_html", lit->data);
+    cJSON_AddStringToObject(ctx, "code", snippet->data);
     cJSON_AddStringToObject(ctx, "code_label", p->code_label);
     cJSON_AddStringToObject(ctx, "glance", p->glance);
     cJSON_AddStringToObject(ctx, "repo", p->repo);
@@ -395,6 +373,8 @@ static cwist_sstring *page_project(const project_t *p) {
 
     cwist_sstring *body = cwist_template_render(TPL_PROJECT_HTML, ctx);
     cJSON_Delete(ctx);
+    cwist_sstring_destroy(snippet);
+    cwist_sstring_destroy(lit);
     if (!body) return NULL;
 
     cwist_sstring *head = render_pagehead("Project", p->name, p->tagline, links);
@@ -449,12 +429,15 @@ static cwist_sstring *page_guide(const guide_t *g) {
     snprintf(kicker, sizeof(kicker), "%s guide · %s · %s min read",
              g->project, g->level, g->minutes);
 
+    cwist_sstring *lit = highlight_blocks(g->body_html);
+
     cJSON *ctx = base_context("/guides/");
-    cJSON_AddStringToObject(ctx, "body_html", g->body_html);
+    cJSON_AddStringToObject(ctx, "body_html", lit->data);
     cJSON_AddItemToObject(ctx, "guides", guides_json(NULL, g->slug));
 
     cwist_sstring *body = cwist_template_render(TPL_GUIDE_HTML, ctx);
     cJSON_Delete(ctx);
+    cwist_sstring_destroy(lit);
     if (!body) return NULL;
 
     cwist_sstring *head = render_pagehead(kicker, g->title, sub, NULL);
@@ -477,7 +460,9 @@ static cwist_sstring *page_prose(const char *kicker, const char *heading,
                                  const char *title, const char *desc,
                                  const char *body_html) {
     cwist_sstring *toc = cwist_sstring_create();
-    cwist_sstring *anchored = anchor_headings(body_html, toc);
+    cwist_sstring *lit = highlight_blocks(body_html);
+    cwist_sstring *anchored = anchor_headings(lit->data, toc);
+    cwist_sstring_destroy(lit);
 
     cJSON *ctx = base_context(canonical);
     cJSON_AddStringToObject(ctx, "body_html", anchored->data);
@@ -510,191 +495,26 @@ static cwist_sstring *page_prose(const char *kicker, const char *heading,
 }
 
 /* -------------------------------------------------------------------------- */
-/* Search                                                                     */
+/* Not found                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/** @brief Build the in-memory index of every page the site publishes. */
-static int build_index(void) {
-    if (cwist_db_exec(g_db,
-            "CREATE TABLE IF NOT EXISTS pages ("
-            "url TEXT PRIMARY KEY, title TEXT, kind TEXT, body TEXT)")
-            .error.err_i16 != 0) {
-        return -1;
-    }
-
-    struct { const char *url, *title, *kind, *body; } fixed[] = {
-        { "/", SITE_ORG, "Organisation",
-          "Open-source systems software in C. CWIST web framework application "
-          "server and libttak deterministic runtime. Plain C, vendored "
-          "dependencies, honest benchmarks, public by default." },
-        { "/about/", "About " SITE_ORG, "Organisation", NULL },
-        { "/contribute/", "Contribute", "Organisation", NULL },
-        { "/projects/", "Projects", "Index",
-          "All repositories maintained by the organisation, including "
-          "libttak-books, the Homebrew tap and this site." }
-    };
-
-    char stripped_about[16384];
-    char stripped_contribute[16384];
-    strip_markup(g_about_html, stripped_about, sizeof(stripped_about));
-    strip_markup(g_contribute_html, stripped_contribute, sizeof(stripped_contribute));
-    fixed[1].body = stripped_about;
-    fixed[2].body = stripped_contribute;
-
-    char sql[65536];
-    char q_title[512], q_body[32768];
-
-    for (size_t i = 0; i < sizeof(fixed) / sizeof(fixed[0]); i++) {
-        sql_quote(fixed[i].title, q_title, sizeof(q_title));
-        sql_quote(fixed[i].body, q_body, sizeof(q_body));
-        snprintf(sql, sizeof(sql),
-            "INSERT OR REPLACE INTO pages VALUES ('%s','%s','%s','%s')",
-            fixed[i].url, q_title, fixed[i].kind, q_body);
-        cwist_db_exec(g_db, sql);
-    }
-
-    for (size_t i = 0; i < g_project_count; i++) {
-        const project_t *p = &g_projects[i];
-        char body[32768], stripped[32768];
-        strip_markup(p->body_html, stripped, sizeof(stripped));
-        snprintf(body, sizeof(body), "%s %s licence %s %s %s",
-                 p->tagline, p->summary, p->licence, p->search_text, stripped);
-
-        sql_quote(p->name, q_title, sizeof(q_title));
-        sql_quote(body, q_body, sizeof(q_body));
-        snprintf(sql, sizeof(sql),
-            "INSERT OR REPLACE INTO pages VALUES ('/projects/%s/','%s','Project','%s')",
-            p->slug, q_title, q_body);
-        cwist_db_exec(g_db, sql);
-    }
-
-    for (size_t i = 0; i < g_guide_count; i++) {
-        const guide_t *g = &g_guides[i];
-        char body[32768], stripped[32768];
-        strip_markup(g->body_html, stripped, sizeof(stripped));
-        snprintf(body, sizeof(body), "%s %s %s", g->summary, g->project, stripped);
-
-        sql_quote(g->title, q_title, sizeof(q_title));
-        sql_quote(body, q_body, sizeof(q_body));
-        snprintf(sql, sizeof(sql),
-            "INSERT OR REPLACE INTO pages VALUES ('/guides/%s/','%s','Guide','%s')",
-            g->slug, q_title, q_body);
-        cwist_db_exec(g_db, sql);
-    }
-    return 0;
-}
-
-/** @brief Render the result rows for a query, or the full page directory when empty. */
-static cwist_sstring *search_results(const char *q) {
-    cwist_sstring *out = cwist_sstring_create();
-
-    const char *sql_all = "SELECT url, title, kind, body FROM pages ORDER BY kind, title";
-    char sql[4096];
-    const char *stmt = sql_all;
-
-    if (q && *q) {
-        char esc[512];
-        sql_quote(q, esc, sizeof(esc));
-        snprintf(sql, sizeof(sql),
-            "SELECT url, title, kind, body FROM pages "
-            "WHERE title LIKE '%%%s%%' OR body LIKE '%%%s%%' "
-            "ORDER BY kind, title LIMIT 25", esc, esc);
-        stmt = sql;
-    } else {
-        cwist_sstring_append(out,
-            "<p class=\"note\">Everything this site "
-            "publishes, in one list. Type above to filter it.</p>");
-    }
-
-    cJSON *rows = NULL;
-    cwist_error_t err = cwist_db_query(g_db, stmt, &rows);
-    if (err.error.err_i16 != 0 || !rows) {
-        cwist_sstring_append(out, "<p>Search is unavailable right now.</p>");
-        if (rows) cJSON_Delete(rows);
-        return out;
-    }
-
-    int n = cJSON_GetArraySize(rows);
-    if (n == 0) {
-        char esc[512];
-        html_escape(q ? q : "", esc, sizeof(esc));
-        s_appendf(out, "<p>No page matches <strong>%s</strong>. "
-                       "Try a project name, or browse the "
-                       "<a href=\"/guides/\">guides</a>.</p>", esc);
-        cJSON_Delete(rows);
-        return out;
-    }
-
-    if (q && *q) {
-        char esc[512];
-        html_escape(q, esc, sizeof(esc));
-        s_appendf(out, "<p class=\"note\">"
-                       "%d result%s for <strong>%s</strong>.</p>",
-                  n, n == 1 ? "" : "s", esc);
-    }
-
-    cwist_sstring_append(out, "<div class=\"rows\">");
-    for (int i = 0; i < n; i++) {
-        cJSON *row = cJSON_GetArrayItem(rows, i);
-        const char *url = cJSON_GetStringValue(cJSON_GetObjectItem(row, "url"));
-        const char *title = cJSON_GetStringValue(cJSON_GetObjectItem(row, "title"));
-        const char *kind = cJSON_GetStringValue(cJSON_GetObjectItem(row, "kind"));
-        const char *body = cJSON_GetStringValue(cJSON_GetObjectItem(row, "body"));
-
-        char snippet[260] = {0};
-        if (body) {
-            snprintf(snippet, sizeof(snippet), "%.230s", body);
-            if (strlen(body) > 230) strcat(snippet, "...");
-        }
-        char e_title[512], e_snippet[1024];
-        html_escape(title ? title : "", e_title, sizeof(e_title));
-        html_escape(snippet, e_snippet, sizeof(e_snippet));
-
-        s_appendf(out,
-            "<a class=\"row\" href=\"%s\"><h3>%s</h3><p>%s</p>"
-            "<span class=\"meta\">%s &middot; %s</span></a>",
-            url ? url : "/", e_title, e_snippet, kind ? kind : "Page",
-            url ? url : "/");
-    }
-    cwist_sstring_append(out, "</div>");
-
-    cJSON_Delete(rows);
-    return out;
-}
-
-static cwist_sstring *page_search(const char *q, bool live) {
-    char e_q[512];
-    html_escape(q ? q : "", e_q, sizeof(e_q));
-
-    cwist_sstring *results = search_results(q);
-
-    cJSON *ctx = base_context("/search/");
-    cJSON_AddStringToObject(ctx, "q", e_q);
-    cJSON_AddStringToObject(ctx, "results_html", results->data);
-
-    cwist_sstring *body = cwist_template_render(TPL_SEARCH_HTML, ctx);
-    cJSON_Delete(ctx);
-    cwist_sstring_destroy(results);
-    if (!body) return NULL;
-
-    cwist_sstring *head = render_pagehead("Search", "Find a page",
-        live ? "Full-text search across every project page, guide and "
-               "organisation page on this site."
-             : "This is the static export, so the index below is the whole site. "
-               "Live full-text search runs when the CWIST server serves this site "
-               "directly.", NULL);
+/** @brief Render the 404 page, used by the miss handlers and by the export. */
+static cwist_sstring *page_notfound(const char *kicker, const char *heading,
+                                    const char *sub, const char *active) {
+    cwist_sstring *body = cwist_template_render(TPL_NOTFOUND_HTML, NULL);
+    cwist_sstring *head = render_pagehead(kicker, heading, sub, NULL);
 
     cwist_sstring *content = cwist_sstring_create();
     cwist_sstring_append(content, head ? head->data : "");
-    cwist_sstring_append(content, body->data);
+    cwist_sstring_append(content, body ? body->data : "");
 
-    cwist_sstring *page = render_layout("Search | " SITE_ORG,
-        "Search the C 4 Punk Developers site.", "/search/", "/search/",
+    cwist_sstring *page = render_layout("Not found | " SITE_ORG,
+        "That page does not exist on this site.", "/404.html", active,
         content->data);
 
     cwist_sstring_destroy(content);
     if (head) cwist_sstring_destroy(head);
-    cwist_sstring_destroy(body);
+    if (body) cwist_sstring_destroy(body);
     return page;
 }
 
@@ -708,7 +528,7 @@ static cwist_sstring *build_sitemap(void) {
         "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
 
     static const char *fixed[] = { "/", "/projects/", "/guides/", "/about/",
-                                   "/contribute/", "/search/" };
+                                   "/contribute/" };
     for (size_t i = 0; i < sizeof(fixed) / sizeof(fixed[0]); i++) {
         s_appendf(out, "  <url><loc>%s%s</loc></url>\n", SITE_BASE, fixed[i]);
     }
@@ -733,19 +553,60 @@ static const char g_robots[] =
 /* Stylesheet                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/** @brief Minify the stylesheet, register it as an asset, and cache its URL. */
+/** @brief The self-hosted web fonts, embedded at build time by tools/embed_bin.sh. */
+static const struct {
+    const char *asset;
+    const char *family;
+    const char *weights;
+    const unsigned char *data;
+    size_t len;
+} g_fonts[] = {
+    { "fonts/inter.woff2",   "Inter",          "100 900",
+      BIN_INTER_WOFF2,   BIN_INTER_WOFF2_LEN },
+    { "fonts/grotesk.woff2", "Space Grotesk",  "300 700",
+      BIN_GROTESK_WOFF2, BIN_GROTESK_WOFF2_LEN },
+    { "fonts/jbmono.woff2",  "JetBrains Mono", "100 800",
+      BIN_JBMONO_WOFF2,  BIN_JBMONO_WOFF2_LEN }
+};
+
+/** @brief The bundled stylesheet, kept so the exporter writes the same bytes. */
+static cwist_sstring *g_css_bundle = NULL;
+
+/**
+ * @brief Register the fonts, build their @font-face rules against the hashed
+ *        asset URLs, bundle everything with the stylesheet and publish it.
+ */
 static void register_styles(cwist_app *app) {
-    const char *parts[] = { TPL_APP_CSS };
-    cwist_sstring *bundle = cwist_css_bundle(parts, 1, true);
-    const char *css = bundle && bundle->data ? bundle->data : TPL_APP_CSS;
+    char faces[1536];
+    size_t o = 0;
+
+    for (size_t i = 0; i < sizeof(g_fonts) / sizeof(g_fonts[0]); i++) {
+        cwist_app_asset_add(app, g_fonts[i].asset, g_fonts[i].data,
+                            g_fonts[i].len, "font/woff2");
+        const char *url = cwist_app_asset_url(app, g_fonts[i].asset);
+        if (!url) continue;
+        o += (size_t)snprintf(faces + o, sizeof(faces) - o,
+            "@font-face{font-family:'%s';font-style:normal;font-weight:%s;"
+            "font-display:swap;src:url(%s) format('woff2');"
+            "unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,"
+            "U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,"
+            "U+2212,U+2215,U+FEFF,U+FFFD;}",
+            g_fonts[i].family, g_fonts[i].weights, url);
+        if (o >= sizeof(faces)) { o = sizeof(faces) - 1; break; }
+    }
+
+    /* @font-face rules first so the browser starts fetching them while the
+     * rest of the sheet parses. The bundler minifies both parts. */
+    const char *parts[] = { faces, TPL_APP_CSS };
+    g_css_bundle = cwist_css_bundle(parts, 2, true);
+    const char *css = g_css_bundle && g_css_bundle->data
+                          ? g_css_bundle->data : TPL_APP_CSS;
 
     cwist_app_asset_add(app, "css/app.css", css, strlen(css),
                         "text/css; charset=utf-8");
 
     const char *url = cwist_app_asset_url(app, "css/app.css");
     if (url) snprintf(g_css_url, sizeof(g_css_url), "%s", url);
-
-    if (bundle) cwist_sstring_destroy(bundle);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -778,18 +639,9 @@ static void h_project(cwist_http_request *req, cwist_http_response *res) {
             return;
         }
     }
-    cwist_sstring *body = cwist_template_render(TPL_NOTFOUND_HTML, NULL);
-    cwist_sstring *head = render_pagehead("404", "No such project",
-        "That project is not one of ours, or the link has moved.", NULL);
-    cwist_sstring *content = cwist_sstring_create();
-    cwist_sstring_append(content, head ? head->data : "");
-    cwist_sstring_append(content, body ? body->data : "");
-    send_page(res, render_layout("Not found | " SITE_ORG, "Page not found.",
-                                 "/projects/", "/projects/", content->data),
-              CWIST_HTTP_NOT_FOUND);
-    cwist_sstring_destroy(content);
-    if (head) cwist_sstring_destroy(head);
-    if (body) cwist_sstring_destroy(body);
+    send_page(res, page_notfound("404", "No such project",
+        "That project is not one of ours, or the link has moved.", "/projects/"),
+        CWIST_HTTP_NOT_FOUND);
 }
 
 static void h_guides(cwist_http_request *req, cwist_http_response *res) {
@@ -805,18 +657,9 @@ static void h_guide(cwist_http_request *req, cwist_http_response *res) {
             return;
         }
     }
-    cwist_sstring *body = cwist_template_render(TPL_NOTFOUND_HTML, NULL);
-    cwist_sstring *head = render_pagehead("404", "No such guide",
-        "That guide does not exist. The index lists every one we publish.", NULL);
-    cwist_sstring *content = cwist_sstring_create();
-    cwist_sstring_append(content, head ? head->data : "");
-    cwist_sstring_append(content, body ? body->data : "");
-    send_page(res, render_layout("Not found | " SITE_ORG, "Page not found.",
-                                 "/guides/", "/guides/", content->data),
-              CWIST_HTTP_NOT_FOUND);
-    cwist_sstring_destroy(content);
-    if (head) cwist_sstring_destroy(head);
-    if (body) cwist_sstring_destroy(body);
+    send_page(res, page_notfound("404", "No such guide",
+        "That guide does not exist. The index lists every one we publish.",
+        "/guides/"), CWIST_HTTP_NOT_FOUND);
 }
 
 static void h_about(cwist_http_request *req, cwist_http_response *res) {
@@ -836,11 +679,6 @@ static void h_contribute(cwist_http_request *req, cwist_http_response *res) {
         "/contribute/", "Contribute | " SITE_ORG,
         "How to contribute to the open-source projects maintained by "
         "C 4 Punk Developers.", g_contribute_html), CWIST_HTTP_OK);
-}
-
-static void h_search(cwist_http_request *req, cwist_http_response *res) {
-    const char *q = cwist_query_map_get(req->query_params, "q");
-    send_page(res, page_search(q, true), CWIST_HTTP_OK);
 }
 
 static void h_sitemap(cwist_http_request *req, cwist_http_response *res) {
@@ -902,8 +740,9 @@ static int export_site(cwist_app *app, const char *root) {
     rc |= export_page(root, "index.html", page_home());
     rc |= export_page(root, "projects/index.html", page_projects());
     rc |= export_page(root, "guides/index.html", page_guides());
-    rc |= export_page(root, "search/index.html", page_search(NULL, false));
-    rc |= export_page(root, "404.html", page_search(NULL, false));
+    rc |= export_page(root, "404.html", page_notfound("404", "Page not found",
+        "That page does not exist on this site. The links below and in the "
+        "header cover everything we publish.", NULL));
 
     rc |= export_page(root, "about/index.html",
         page_prose("About", "An independent group writing C",
@@ -938,16 +777,21 @@ static int export_site(cwist_app *app, const char *root) {
     rc |= write_file(root, "robots.txt", g_robots, strlen(g_robots));
     rc |= write_file(root, ".nojekyll", "", 0);
 
-    /* The stylesheet goes out under the same content-hashed URL the pages
-     * reference, so the static export and the live server stay identical. */
-    const char *parts[] = { TPL_APP_CSS };
-    cwist_sstring *css = cwist_css_bundle(parts, 1, true);
-    const char *text = css && css->data ? css->data : TPL_APP_CSS;
+    /* The stylesheet and the fonts go out under the same content-hashed URLs
+     * the pages reference, so the export and the live server serve identical
+     * bytes from identical paths. */
+    const char *text = g_css_bundle && g_css_bundle->data
+                           ? g_css_bundle->data : TPL_APP_CSS;
     rc |= write_file(root, g_css_url + 1, text, strlen(text));
     rc |= write_file(root, "assets/css/app.css", text, strlen(text));
-    if (css) cwist_sstring_destroy(css);
 
-    (void)app;
+    for (size_t i = 0; i < sizeof(g_fonts) / sizeof(g_fonts[0]); i++) {
+        const char *url = cwist_app_asset_url(app, g_fonts[i].asset);
+        if (!url) continue;
+        rc |= write_file(root, url + 1, (const char *)g_fonts[i].data,
+                         g_fonts[i].len);
+    }
+
     printf("site: export %s\n", rc == 0 ? "complete" : "finished with errors");
     return rc;
 }
@@ -963,17 +807,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (cwist_db_open(&g_db, ":memory:").error.err_i16 != 0 || !g_db) {
-        fprintf(stderr, "site: cannot open the search index\n");
-        cwist_app_destroy(app);
-        return 1;
-    }
-    build_index();
     register_styles(app);
 
     if (argc > 2 && strcmp(argv[1], "--export") == 0) {
         int rc = export_site(app, argv[2]);
-        cwist_db_close(g_db);
         cwist_app_destroy(app);
         return rc == 0 ? 0 : 1;
     }
@@ -991,8 +828,6 @@ int main(int argc, char **argv) {
     cwist_app_get(app, "/about/", h_about);
     cwist_app_get(app, "/contribute", h_contribute);
     cwist_app_get(app, "/contribute/", h_contribute);
-    cwist_app_get(app, "/search", h_search);
-    cwist_app_get(app, "/search/", h_search);
     cwist_app_get(app, "/sitemap.xml", h_sitemap);
     cwist_app_get(app, "/robots.txt", h_robots);
 
@@ -1001,7 +836,6 @@ int main(int argc, char **argv) {
 
     int rc = cwist_app_listen(app, SITE_PORT);
 
-    cwist_db_close(g_db);
     cwist_app_destroy(app);
     return rc;
 }

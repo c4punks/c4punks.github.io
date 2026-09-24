@@ -157,9 +157,6 @@ static const project_t g_projects[] = {
         "server.</p>",
         g_cwist_features,
         sizeof(g_cwist_features) / sizeof(g_cwist_features[0]),
-        "CWIST C web framework application server HTTP/1.1 HTTP/2 HTTP/3 QUIC "
-        "WebSocket WebTransport post-quantum TLS X25519MLKEM768 SQLite ORM "
-        "reactor thread-per-connection wasm32-wasip2 WASI static linking C17"
     },
     {
         "libttak",
@@ -223,10 +220,6 @@ static const project_t g_projects[] = {
         "framework: you call it from your own <code>main</code>.</p>",
         g_libttak_features,
         sizeof(g_libttak_features) / sizeof(g_libttak_features[0]),
-        "libttak deterministic systems runtime C generational arena epoch "
-        "reclamation detachable ownership thread pool future lattice scheduler "
-        "zero-copy IO hash table ring buffer B+ tree priority queue bigint matrix "
-        "NTT CUDA OpenCL ROCm tail latency allocator contention"
     }
 };
 

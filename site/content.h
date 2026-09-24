@@ -4,7 +4,7 @@
  *
  * Everything the site says about the organisation and its repositories lives
  * here as plain data, so the handlers in main.c only deal with routing,
- * templating and search.
+ * templating and rendering.
  */
 
 #ifndef SITE_CONTENT_H
@@ -54,7 +54,6 @@ typedef struct {
     const char *body_html;
     const feature_t *features;
     size_t feature_count;
-    const char *search_text;
 } project_t;
 
 typedef struct {
@@ -181,6 +180,10 @@ static const char g_about_html[] =
     "every component in that linked set travel with it: the Apache-2.0 patent "
     "grant and NOTICE terms, and the attribution clauses of the BSD-licensed "
     "components. Review the set before you ship rather than after.</p>"
+    "<p>This site redistributes three web fonts, all under the SIL Open Font "
+    "License 1.1: Inter, Space Grotesk and JetBrains Mono. They are embedded in "
+    "the binary as latin subsets and served from the asset registry; "
+    "<code>site/fonts/README.md</code> carries the notice the OFL requires.</p>"
     "<p>Contributions are accepted under the licence of the repository you are "
     "contributing to. We do not ask for a copyright assignment or a separate "
     "contributor licence agreement.</p>"

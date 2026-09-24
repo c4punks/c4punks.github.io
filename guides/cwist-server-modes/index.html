@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/guides/cwist-server-modes/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
+<link rel="stylesheet" href="/assets/css/app.82928bd1c9cd2f14.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <span class="brand-name"><b>C 4 Punk</b><span class="brand-rest"> Developers</span></span>
     </a>
     <nav class="nav" aria-label="Main">
-      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a>
       <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
     </nav>
   </div>
@@ -42,11 +42,11 @@
 <section class="section">
   <div class="wrap">
     <article class="prose">
-      <h2>The decision in one paragraph</h2><p>If the number of open connections is what grows, use the reactor. If the number of concurrent in-flight requests is bounded and you care about the median and p99, try the classic pool and measure. That is the whole heuristic; the rest of this guide is why it holds.</p><h2>What the reactor does</h2><p>The CWIST reactor is the default mode. It multiplexes many connections per event loop, so connection count is decoupled from thread count. A connection costs a reactor slot rather than a parked thread, which is what makes very high connection counts affordable in memory.</p><p>The cost is that requests share a loop. Work queued behind other work on the same loop waits, and that shows up in the middle of the distribution rather than at the edges.</p><h2>What the classic pool does</h2><p>The classic pool is thread-per-connection, enabled with <code>CWIST_C1M_MODE=0</code>. Every connection gets its own thread, so no request waits behind another in a batch. In our published runs it answers the median request in less than half the time of the async comparison row and stays ahead through p99.</p><p>The cost is per-connection memory and scheduler pressure. Thread count tracks connection count, so this mode stops being the right answer at the point where connections are cheap and numerous.</p><h2>Reading the numbers we publish</h2><p>Our benchmark tables report the corrected latency distribution, not only a mean, because an average hides which requests were slow. Read them like this:</p><ul><li><strong>Mean</strong> tells you almost nothing on its own.</li><li><strong>P50 through P99</strong> is where the classic pool leads in our runs.</li><li><strong>The extreme tail</strong> is where the crossover happens and the async comparison is tighter. We say so in the same table rather than cropping the column.</li><li><strong>Memory columns</strong> are end samples, not peaks. Compare a single-process server against PSS, not RSS.</li></ul><h2>Why you should not take our numbers</h2><p>Published figures come from one commit, one load profile and one CI environment. The runner CPU model changes between runs and moves the numbers more than most code changes do. They establish a shape, not a guarantee, and they are not a causal explanation of scheduling behaviour.</p><h2>Measuring your own</h2><pre><code># warm up first, and discard the warmup
-wrk -t4 -c100 -d10s http://localhost:8080/ &gt; /dev/null
-wrk -t4 -c100 -d10s --latency http://localhost:8080/
+      <h2>The decision in one paragraph</h2><p>If the number of open connections is what grows, use the reactor. If the number of concurrent in-flight requests is bounded and you care about the median and p99, try the classic pool and measure. That is the whole heuristic; the rest of this guide is why it holds.</p><h2>What the reactor does</h2><p>The CWIST reactor is the default mode. It multiplexes many connections per event loop, so connection count is decoupled from thread count. A connection costs a reactor slot rather than a parked thread, which is what makes very high connection counts affordable in memory.</p><p>The cost is that requests share a loop. Work queued behind other work on the same loop waits, and that shows up in the middle of the distribution rather than at the edges.</p><h2>What the classic pool does</h2><p>The classic pool is thread-per-connection, enabled with <code>CWIST_C1M_MODE=0</code>. Every connection gets its own thread, so no request waits behind another in a batch. In our published runs it answers the median request in less than half the time of the async comparison row and stays ahead through p99.</p><p>The cost is per-connection memory and scheduler pressure. Thread count tracks connection count, so this mode stops being the right answer at the point where connections are cheap and numerous.</p><h2>Reading the numbers we publish</h2><p>Our benchmark tables report the corrected latency distribution, not only a mean, because an average hides which requests were slow. Read them like this:</p><ul><li><strong>Mean</strong> tells you almost nothing on its own.</li><li><strong>P50 through P99</strong> is where the classic pool leads in our runs.</li><li><strong>The extreme tail</strong> is where the crossover happens and the async comparison is tighter. We say so in the same table rather than cropping the column.</li><li><strong>Memory columns</strong> are end samples, not peaks. Compare a single-process server against PSS, not RSS.</li></ul><h2>Why you should not take our numbers</h2><p>Published figures come from one commit, one load profile and one CI environment. The runner CPU model changes between runs and moves the numbers more than most code changes do. They establish a shape, not a guarantee, and they are not a causal explanation of scheduling behaviour.</p><h2>Measuring your own</h2><pre><code class="lang-sh"><span class="tok-c"># warm up first, and discard the warmup</span>
+<span class="tok-f">wrk</span> <span class="tok-k">-t4</span> <span class="tok-k">-c100</span> <span class="tok-k">-d10s</span> http://localhost:8080/ &gt; /dev/null
+<span class="tok-f">wrk</span> <span class="tok-k">-t4</span> <span class="tok-k">-c100</span> <span class="tok-k">-d10s</span> <span class="tok-k">--latency</span> http://localhost:8080/
 
-# then the other mode, same flags, same machine, same commit
+<span class="tok-c"># then the other mode, same flags, same machine, same commit</span>
 CWIST_C1M_MODE=0 ./server</code></pre><p>Keep the load generator off the machine under test if you can. Run each mode more than once. If the two runs of the same mode differ by more than the gap between modes, you have measured your environment rather than the server.</p><h2>Summary</h2><p>Neither mode is the better one in general. The reactor decouples connections from threads; the classic pool refuses to queue requests behind each other. Pick per workload, switch with one environment variable, and trust your own distribution over anyone's headline number.</p>
     </article>
   </div>
@@ -101,8 +101,8 @@ CWIST_C1M_MODE=0 ./server</code></pre><p>Keep the load generator off the machine
         <h4>Learn</h4>
         <ul>
           <li><a href="/guides/">Guides</a></li>
-          <li><a href="/search/">Search</a></li>
           <li><a href="/about/">About us</a></li>
+          <li><a href="/projects/cwist/">CWIST guides</a></li>
         </ul>
       </div>
       <div>

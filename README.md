@@ -12,29 +12,34 @@ The site is a [CWIST](https://github.com/c4punks/CWIST) application compiled to
 
 | Command | What it does |
 | --- | --- |
-| `make run` | Serves the site over `wasi:sockets` under wasmtime, with live full-text search. |
+| `make run` | Serves the site over `wasi:sockets` under wasmtime. |
 | `make export` | Renders every route to static HTML in the repository root, which is what GitHub Pages publishes. |
 
 There is no JavaScript on any page. Markup is written as templates and rendered
-by CWIST's template engine; the stylesheet is minified and content-hashed by
-CWIST's CSS composer and served from its in-memory asset registry.
+by CWIST's template engine. The stylesheet and the three self-hosted woff2 web
+fonts are minified, content-hashed and served from CWIST's in-memory asset
+registry. Syntax highlighting is done in C at render time by
+`site/highlight.h`, so code samples arrive already coloured.
 
 ## Layout
 
 ```
 site/
-  main.c          routing, rendering, search and the static exporter
+  main.c          routing, rendering and the static exporter
   content.h       organisation copy: principles, about, contributing
   projects.h      project entries (CWIST, libttak)
   guides.h        long-form guides
+  highlight.h     the C and shell syntax highlighter
   templates/      HTML templates and the stylesheet
-  tools/embed.sh  embeds templates into the binary at build time
+  fonts/          self-hosted woff2 web fonts (Inter, Space Grotesk, JetBrains Mono)
+  tools/          embeds templates and fonts into the binary at build time
 ```
 
-`site/templates.h` and `site/site.wasm` are generated and not committed.
+`site/templates.h`, `site/fonts.h` and `site/site.wasm` are generated and
+not committed.
 
 Everything published at the repository root (`index.html`, `projects/`,
-`guides/`, `about/`, `contribute/`, `search/` and `sitemap.xml`) is output from
+`guides/`, `about/`, `contribute/`, `assets/` and `sitemap.xml`) is output from
 `make export`. Edit the sources in `site/`, not the generated HTML.
 
 ## Building
@@ -52,11 +57,18 @@ Override the toolchain paths if yours differ:
 make CWIST_ROOT=/path/to/CWIST WASI_SDK=/path/to/wasi-sdk WASMTIME=/path/to/wasmtime
 ```
 
+## Continuous integration
+
+`.github/workflows/build-site.yml` rebuilds the site on every push that touches
+`site/`. It builds the CWIST WASI archive, links the application against it,
+runs the exporter under wasmtime, and commits the result. The published HTML is
+therefore always the output of a C program, and never something edited by hand.
+
 ## Editing content
 
 All copy lives in the three header files under `site/`. Adding a guide means
 appending one entry to `g_guides` in `guides.h`; the index page, the project
-page listing, the sitemap and the search index all pick it up automatically.
+page listing and the sitemap all pick it up automatically.
 
 ## Licence
 
@@ -66,3 +78,6 @@ The content and code in this repository are MIT, matching CWIST. See
 The projects this site describes are licensed separately: CWIST is MIT,
 libttak is BSD 3-Clause, and CWIST's vendored dependencies keep their own
 terms. Each repository's own `LICENSE` file is the authoritative text.
+
+The bundled web fonts are under the SIL Open Font License 1.1; see
+[`site/fonts/README.md`](site/fonts/README.md).

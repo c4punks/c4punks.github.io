@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/guides/cwist-wasi/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
+<link rel="stylesheet" href="/assets/css/app.82928bd1c9cd2f14.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <span class="brand-name"><b>C 4 Punk</b><span class="brand-rest"> Developers</span></span>
     </a>
     <nav class="nav" aria-label="Main">
-      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a><a class="nav-link" href="/search/">Search</a>
+      <a class="nav-link" href="/projects/">Projects</a><a class="nav-link is-active" href="/guides/">Guides</a><a class="nav-link" href="/about/">About</a><a class="nav-link" href="/contribute/">Contribute</a>
       <a class="nav-link nav-ext" href="https://github.com/c4punks" rel="noopener">GitHub</a>
     </nav>
   </div>
@@ -42,18 +42,18 @@
 <section class="section">
   <div class="wrap">
     <article class="prose">
-      <h2>What you will build</h2><p>The same server source from the getting-started guide, compiled to a <code>.wasm</code> component and run by wasmtime. The guest owns the accept loop through <code>wasi:sockets</code>, so this is a real server inside the sandbox rather than a handler invoked by a host.</p><h2>What you will need</h2><ul><li>The WASI SDK (25.0 or newer), for <code>clang</code> with a <code>wasm32-wasip2</code> target.</li><li>wasmtime 25 or newer.</li><li>A CWIST checkout, to build the WASI archive.</li></ul><h2>Step 1: build the WASI archive</h2><p>From the CWIST checkout, produce the wasip2 static library:</p><pre><code>make wasip2</code></pre><p>That leaves <code>libcwist_wasip2_wasm32-wasip2.a</code> in the repository root. It is an ordinary static archive; you link it the way you would link any other.</p><h2>Step 2: compile your server against it</h2><pre><code>$WASI_SDK/bin/clang \
-  --target=wasm32-wasip2 -std=c17 -O2 \
-  -D_WASI_EMULATED_GETPID \
-  -I$CWIST/include -I$CWIST/lib/cjson \
-  -o server.wasm main.c \
-  $CWIST/libcwist_wasip2_wasm32-wasip2.a \
-  -lwasi-emulated-pthread -lwasi-emulated-getpid \
-  -Wl,--gc-sections -Wl,-z,stack-size=1048576</code></pre><p>Two flags are load-bearing. The emulated pthread and getpid libraries stand in for POSIX facilities the sandbox does not provide. The stack size matters because the default wasm stack is small and a template or TLS path will overflow it; a megabyte is a safe starting point.</p><h2>Step 3: run it</h2><pre><code>wasmtime run -S preview2=y -S tcp=y -S inherit-network=y server.wasm</code></pre><p>Each flag grants one capability: preview2 selects the component model ABI, <code>tcp</code> allows socket use, and <code>inherit-network</code> lets the guest bind on the host's network. Without them the process starts and then fails to listen, which is the sandbox behaving correctly.</p><pre><code>curl -i http://localhost:8080/</code></pre><h2>Step 4: what changes inside the sandbox</h2><ul><li><strong>No filesystem unless you grant one.</strong> Pass <code>--dir .</code> if you need one; otherwise embed what you need at build time. This site embeds its templates into the binary for exactly that reason.</li><li><strong>Threads are limited.</strong> Prefer the reactor path; thread-per-connection has nowhere useful to go here.</li><li><strong>Environment variables are not inherited</strong> unless you pass <code>--env</code>.</li><li><strong>Time and randomness are host-provided capabilities</strong> and can be withheld.</li></ul><h2>Step 5: serving assets without a filesystem</h2><p>CWIST's asset registry keeps content in memory and serves it at a content-hashed URL, which is what makes the no-filesystem case practical:</p><pre><code>cwist_app_asset_add(app, "css/app.css", css, strlen(css),
-                    "text/css; charset=utf-8");
+      <h2>What you will build</h2><p>The same server source from the getting-started guide, compiled to a <code>.wasm</code> component and run by wasmtime. The guest owns the accept loop through <code>wasi:sockets</code>, so this is a real server inside the sandbox rather than a handler invoked by a host.</p><h2>What you will need</h2><ul><li>The WASI SDK (25.0 or newer), for <code>clang</code> with a <code>wasm32-wasip2</code> target.</li><li>wasmtime 25 or newer.</li><li>A CWIST checkout, to build the WASI archive.</li></ul><h2>Step 1: build the WASI archive</h2><p>From the CWIST checkout, produce the wasip2 static library. The target is named after the artefact it builds:</p><pre><code class="lang-sh"><span class="tok-f">make</span> libcwist_wasip2_wasm32-wasip2.a</code></pre><p>That leaves <code>libcwist_wasip2_wasm32-wasip2.a</code> in the repository root. It is an ordinary static archive; you link it the way you would link any other.</p><h2>Step 2: compile your server against it</h2><pre><code class="lang-sh"><span class="tok-v">$WASI_SDK</span>/bin/clang \
+  <span class="tok-k">--target</span>=wasm32-wasip2 <span class="tok-k">-std</span>=c17 <span class="tok-k">-O2</span> \
+  <span class="tok-k">-D_WASI_EMULATED_GETPID</span> \
+  <span class="tok-k">-I$CWIST/include</span> <span class="tok-k">-I$CWIST/lib/cjson</span> \
+  <span class="tok-k">-o</span> server.wasm main.c \
+  <span class="tok-v">$CWIST</span>/libcwist_wasip2_wasm32-wasip2.a \
+  <span class="tok-k">-lwasi-emulated-pthread</span> <span class="tok-k">-lwasi-emulated-getpid</span> \
+  <span class="tok-k">-Wl,--gc-sections</span> <span class="tok-k">-Wl,-z,stack-size</span>=1048576</code></pre><p>Two flags are load-bearing. The emulated pthread and getpid libraries stand in for POSIX facilities the sandbox does not provide. The stack size matters because the default wasm stack is small and a template or TLS path will overflow it; a megabyte is a safe starting point.</p><h2>Step 3: run it</h2><pre><code class="lang-sh"><span class="tok-f">wasmtime</span> run <span class="tok-k">-S</span> preview2=y <span class="tok-k">-S</span> tcp=y <span class="tok-k">-S</span> inherit-network=y server.wasm</code></pre><p>Each flag grants one capability: preview2 selects the component model ABI, <code>tcp</code> allows socket use, and <code>inherit-network</code> lets the guest bind on the host's network. Without them the process starts and then fails to listen, which is the sandbox behaving correctly.</p><pre><code class="lang-sh"><span class="tok-f">curl</span> <span class="tok-k">-i</span> http://localhost:8080/</code></pre><h2>Step 4: what changes inside the sandbox</h2><ul><li><strong>No filesystem unless you grant one.</strong> Pass <code>--dir .</code> if you need one; otherwise embed what you need at build time. This site embeds its templates into the binary for exactly that reason.</li><li><strong>Threads are limited.</strong> Prefer the reactor path; thread-per-connection has nowhere useful to go here.</li><li><strong>Environment variables are not inherited</strong> unless you pass <code>--env</code>.</li><li><strong>Time and randomness are host-provided capabilities</strong> and can be withheld.</li></ul><h2>Step 5: serving assets without a filesystem</h2><p>CWIST's asset registry keeps content in memory and serves it at a content-hashed URL, which is what makes the no-filesystem case practical:</p><pre><code class="lang-c"><span class="tok-f">cwist_app_asset_add</span>(app, <span class="tok-s">"css/app.css"</span>, css, <span class="tok-f">strlen</span>(css),
+                    <span class="tok-s">"text/css; charset=utf-8"</span>);
 
-const char *url = cwist_app_asset_url(app, "css/app.css");
-/* -&gt; /assets/css/app.&lt;hash&gt;.css, immutable for a year */</code></pre><p>Changing the bytes changes the URL, so a cache never serves a stale copy and an unchanged file keeps its URL across restarts. Register assets before <code>cwist_app_listen()</code>.</p><h2>Summary</h2><p>A CWIST server compiles to a WASI 0.2 component with no source changes, keeps its own accept loop, and runs under a capability list you control. Anything it needs from the outside world (sockets, files, environment, clock) is something you granted on the command line.</p>
+<span class="tok-k">const</span> <span class="tok-t">char</span> *url = <span class="tok-f">cwist_app_asset_url</span>(app, <span class="tok-s">"css/app.css"</span>);
+<span class="tok-c">/* -&gt; /assets/css/app.&lt;hash&gt;.css, immutable for a year */</span></code></pre><p>Changing the bytes changes the URL, so a cache never serves a stale copy and an unchanged file keeps its URL across restarts. Register assets before <code>cwist_app_listen()</code>.</p><h2>Summary</h2><p>A CWIST server compiles to a WASI 0.2 component with no source changes, keeps its own accept loop, and runs under a capability list you control. Anything it needs from the outside world (sockets, files, environment, clock) is something you granted on the command line.</p>
     </article>
   </div>
 </section>
@@ -107,8 +107,8 @@ const char *url = cwist_app_asset_url(app, "css/app.css");
         <h4>Learn</h4>
         <ul>
           <li><a href="/guides/">Guides</a></li>
-          <li><a href="/search/">Search</a></li>
           <li><a href="/about/">About us</a></li>
+          <li><a href="/projects/cwist/">CWIST guides</a></li>
         </ul>
       </div>
       <div>

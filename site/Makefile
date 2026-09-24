@@ -11,7 +11,7 @@ ARCHIVE     = $(CWIST_ROOT)/libcwist_wasip2_wasm32-wasip2.a
 OUT_DIR    ?= ..
 
 TEMPLATES = $(wildcard templates/*.html) templates/app.css
-SOURCES   = main.c content.h projects.h guides.h templates.h
+FONTS     = $(wildcard fonts/*.woff2)
 
 CFLAGS = --target=wasm32-wasip2 -std=c17 -O2 -Wall -Wextra -fvisibility=hidden \
 	-D_WASI_EMULATED_GETPID \
@@ -33,15 +33,18 @@ all: site.wasm
 templates.h: $(TEMPLATES) tools/embed.sh
 	./tools/embed.sh $@ $(TEMPLATES)
 
-site.wasm: main.c content.h projects.h guides.h templates.h Makefile
+fonts.h: $(FONTS) tools/embed_bin.sh
+	./tools/embed_bin.sh $@ $(FONTS)
+
+site.wasm: main.c content.h projects.h guides.h highlight.h templates.h fonts.h Makefile
 	$(WASI_SDK)/bin/clang $(CFLAGS) -o $@ main.c $(ARCHIVE) $(LDFLAGS)
 
 run: site.wasm
 	$(WASMTIME) run -S preview2=y -S tcp=y -S inherit-network=y site.wasm
 
 export: site.wasm
-	rm -f $(OUT_DIR)/assets/css/app.*.css
+	rm -f $(OUT_DIR)/assets/css/app.*.css $(OUT_DIR)/assets/fonts/*.woff2
 	$(WASMTIME) run -S preview2=y --dir $(OUT_DIR)::/out site.wasm --export /out
 
 clean:
-	rm -f site.wasm templates.h
+	rm -f site.wasm templates.h fonts.h
