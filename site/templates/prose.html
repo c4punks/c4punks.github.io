@@ -1,7 +1,13 @@
 <section class="section">
   <div class="wrap">
-    <article class="prose">
-      {{ body_html }}
-    </article>
+    <div class="doclayout">
+      <aside class="docaside">
+        {{ toc_html }}
+        {{ aside_html }}
+      </aside>
+      <article class="prose">
+        {{ body_html }}
+      </article>
+    </div>
   </div>
 </section>

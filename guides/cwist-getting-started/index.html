@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Building a web service with CWIST — C 4 Punk Developers</title>
+<title>Building a web service with CWIST | C 4 Punk Developers</title>
 <meta name="description" content="Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.">
 <link rel="canonical" href="https://c4punks.github.io/guides/cwist-getting-started/">
 <meta property="og:site_name" content="C 4 Punk Developers">
-<meta property="og:title" content="Building a web service with CWIST — C 4 Punk Developers">
+<meta property="og:title" content="Building a web service with CWIST | C 4 Punk Developers">
 <meta property="og:description" content="Install the library, serve your first route, add JSON, a database and a health endpoint, then run the binary you just produced.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/guides/cwist-getting-started/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.85ed2af02fa2b9b1.css">
+<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -60,7 +60,7 @@ int main(void) {
     return 0;
 }</code></pre><p>Three things are worth naming here. <code>cwist_app_create()</code> allocates the application and everything hanging off it. <code>cwist_app_get()</code> registers a handler for a method and path. <code>cwist_app_listen()</code> blocks and runs the accept loop, so anything you want configured must be configured before it.</p><h2>Step 3: compile and run</h2><pre><code>gcc -o server main.c -lcwist -lssl -lcrypto -lz -lzstd \
     -lbrotlienc -lbrotlicommon -luriparser -lcjson -ldl -lpthread -lm
-./server</code></pre><p>If you installed with pkg-config metadata available, <code>gcc -o server main.c $(pkg-config --cflags --libs cwist)</code> does the same job. Then, from another terminal:</p><pre><code>curl -i http://localhost:8080/</code></pre><p>You should see <code>HTTP/1.1 200 OK</code> and the greeting. If the connection is refused, the process is not listening yet or port 8080 is already taken &mdash; change the argument to <code>cwist_app_listen()</code> and rebuild.</p><h2>Step 4: path parameters and query strings</h2><p>A route segment beginning with a colon becomes a path parameter, and both parameter maps are read the same way:</p><pre><code>static void greet(cwist_http_request *req, cwist_http_response *res) {
+./server</code></pre><p>If you installed with pkg-config metadata available, <code>gcc -o server main.c $(pkg-config --cflags --libs cwist)</code> does the same job. Then, from another terminal:</p><pre><code>curl -i http://localhost:8080/</code></pre><p>You should see <code>HTTP/1.1 200 OK</code> and the greeting. If the connection is refused, the process is not listening yet or port 8080 is already taken. Change the argument to <code>cwist_app_listen()</code> and rebuild.</p><h2>Step 4: path parameters and query strings</h2><p>A route segment beginning with a colon becomes a path parameter, and both parameter maps are read the same way:</p><pre><code>static void greet(cwist_http_request *req, cwist_http_response *res) {
     const char *name  = cwist_query_map_get(req-&gt;path_params, "name");
     const char *style = cwist_query_map_get(req-&gt;query_params, "style");
 
@@ -181,8 +181,8 @@ if (err.error.err_i16 == 0 &amp;&amp; rows) {
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
-      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+      <span>&copy; 2026 C 4 Punk Developers. CWIST is MIT, libttak is BSD 3-Clause.</span>
+      <span>Rendered by CWIST on WASI 0.2. No JavaScript on this site.</span>
     </div>
   </div>
 </footer>

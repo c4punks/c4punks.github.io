@@ -32,7 +32,7 @@
     <div class="grid grid-2">
       {% for p in projects %}
       <article class="repo">
-        <div class="repo-head"><h3>{{ p.name }}</h3><span class="tag">{{ p.tag }}</span></div>
+        <div class="repo-head"><h3>{{ p.name }}</h3><span class="tag">{{ p.tag }}</span><span class="tag">{{ p.licence }}</span></div>
         <p class="sub">{{ p.tagline }}</p>
         <p>{{ p.summary }}</p>
         <ul>{{ p.bullets_html }}</ul>
@@ -70,12 +70,14 @@
   <div class="wrap">
     <div class="grid grid-2">
       <div>
-        <p class="kicker">Start here</p>
-        <h2 style="margin:0 0 12px;font-size:clamp(1.6rem,3.2vw,2.1rem);font-weight:800;letter-spacing:-.025em;line-height:1.2">Five lines to a running server</h2>
-        <p style="color:var(--muted);margin:0 0 20px">CWIST is a normal C library. Install it, include one header,
-        register a route, and call listen. No code generation, no build plugin,
-        no runtime to deploy alongside it.</p>
-        <div class="links" style="display:flex;gap:16px;font-weight:600;font-size:.95rem">
+        <div class="section-head tight">
+          <p class="kicker">Start here</p>
+          <h2>Five lines to a running server</h2>
+          <p>CWIST is a normal C library. Install it, include one header,
+          register a route, and call listen. No code generation, no build
+          plugin, no runtime to deploy alongside it.</p>
+        </div>
+        <div class="links">
           <a href="/guides/cwist-getting-started/">Read the getting-started guide &rarr;</a>
         </div>
       </div>

@@ -76,7 +76,7 @@ static const guide_t g_guides[] = {
         "<pre><code>curl -i http://localhost:8080/</code></pre>"
         "<p>You should see <code>HTTP/1.1 200 OK</code> and the greeting. If the "
         "connection is refused, the process is not listening yet or port 8080 is "
-        "already taken &mdash; change the argument to "
+        "already taken. Change the argument to "
         "<code>cwist_app_listen()</code> and rebuild.</p>"
 
         "<h2>Step 4: path parameters and query strings</h2>"
@@ -335,8 +335,8 @@ static const guide_t g_guides[] = {
         "<h2>Summary</h2>"
         "<p>A CWIST server compiles to a WASI 0.2 component with no source "
         "changes, keeps its own accept loop, and runs under a capability list you "
-        "control. Anything it needs from the outside world &mdash; sockets, "
-        "files, environment, clock &mdash; is something you granted on the "
+        "control. Anything it needs from the outside world (sockets, "
+        "files, environment, clock) is something you granted on the "
         "command line.</p>"
     },
     {
@@ -352,8 +352,8 @@ static const guide_t g_guides[] = {
         "unstable tail: most requests are fine, and the slow ones are slow for "
         "reasons that do not appear in a profile taken at a calm moment.</p>"
         "<p>Arenas change the shape of the problem. Instead of freeing each "
-        "object where it happens to die, you declare a boundary &mdash; a "
-        "request, a frame, a batch &mdash; and reclaim everything inside it at "
+        "object where it happens to die, you declare a boundary (a "
+        "request, a frame, a batch) and reclaim everything inside it at "
         "once.</p>"
 
         "<h2>Step 1: set up an arena environment</h2>"
@@ -386,7 +386,7 @@ static const guide_t g_guides[] = {
         "<code>NULL</code> when the generation cannot satisfy it, so check it "
         "like any allocator. <code>retire()</code> reclaims everything at once. "
         "Every pointer taken from the generation is dead the instant it returns "
-        "&mdash; that is the contract, and it is also the whole benefit.</p>"
+        "That is the contract, and it is also the whole benefit.</p>"
 
         "<h2>Step 3: know how much room is left</h2>"
         "<pre><code>size_t left = ttak_arena_generation_remaining(&amp;gen);\n"
@@ -395,13 +395,13 @@ static const guide_t g_guides[] = {
         "}</code></pre>"
         "<p>If you want a generation reused rather than returned, "
         "<code>ttak_arena_generation_reset()</code> rewinds it without giving the "
-        "memory back to the environment &mdash; useful for a loop that processes "
+        "memory back to the environment, which is useful for a loop that processes "
         "many small items.</p>"
 
         "<h2>Step 4: rotate under steady load</h2>"
         "<p><code>ttak_arena_env_rotate()</code> advances the environment so that "
         "retired generations become reusable. Call it at a natural quiet point "
-        "&mdash; the end of a batch, a tick boundary &mdash; rather than on every "
+        "(the end of a batch, a tick boundary) rather than on every "
         "request, since the point is to move cleanup to a moment you chose.</p>"
 
         "<h2>Step 5: the cross-thread case</h2>"

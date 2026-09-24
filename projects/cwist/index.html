@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>CWIST — C 4 Punk Developers</title>
+<title>CWIST | C 4 Punk Developers</title>
 <meta name="description" content="C Web development Is Still Trustworthy. A web framework and application server written in plain C. It terminates modern protocols itself, embeds a database layer, and links statically into a single binary you can copy onto a machine.">
 <link rel="canonical" href="https://c4punks.github.io/projects/cwist/">
 <meta property="og:site_name" content="C 4 Punk Developers">
-<meta property="og:title" content="CWIST — C 4 Punk Developers">
+<meta property="og:title" content="CWIST | C 4 Punk Developers">
 <meta property="og:description" content="C Web development Is Still Trustworthy. A web framework and application server written in plain C. It terminates modern protocols itself, embeds a database layer, and links statically into a single binary you can copy onto a machine.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/projects/cwist/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.85ed2af02fa2b9b1.css">
+<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -43,7 +43,7 @@
   <div class="wrap">
     <div class="grid grid-2">
       <div class="prose">
-        <h2>What CWIST is</h2><p>CWIST is a C17 web framework and application server. It is not a binding over someone else's HTTP engine: the protocol stack, the reactor, the TLS configuration and the database layer are all part of the same static library, and the result is one binary with no runtime to install beside it.</p><p>The name is an argument as much as an acronym. Writing a web service in C is usually treated as a mistake by default; CWIST exists to make the ordinary version of that job &mdash; routing, TLS, a database, metrics, a health endpoint &mdash; as short to write as it is in any other ecosystem.</p><h2>Two server modes, and why both exist</h2><p>CWIST ships two request paths tuned for opposite things, selected with one environment variable.</p><p>The <strong>CWIST reactor</strong> is the default. It multiplexes many connections per event loop, so connection count is decoupled from thread count and a connection costs a reactor slot rather than a parked thread. It is the mode to pick when the number of open connections is the thing that grows.</p><p>The <strong>classic pool</strong> is thread-per-connection, enabled with <code>CWIST_C1M_MODE=0</code>. Every connection gets its own thread, so no request waits behind another in a batch. In our published runs it leads through the median and p99; the crossover against the async comparison happens at the extreme tail.</p><p>We publish the whole distribution rather than an average, because an average hides which requests were slow. The numbers come from one commit, one load profile and one CI environment, and the runner CPU model moves them more than most code changes do. Read them as a shape, not a guarantee.</p><h2>Where it fits</h2><p>CWIST is a reasonable choice when you already have C in the picture: an embedded system that grew an API, a numerical or media service whose core is C and whose HTTP layer should not double the deployment, or a service where the operators want to read every layer they are on call for. It is a poor choice if what you actually want is a large library ecosystem for business logic.</p><h2>Installing</h2><p>CWIST vendors its dependencies, so a clone and <code>make</code> is usually enough. There is also a Homebrew tap for macOS and Linuxbrew. The getting-started guide walks through both, then builds a first server.</p>
+        <h2>What CWIST is</h2><p>CWIST is a C17 web framework and application server. It is not a binding over someone else's HTTP engine: the protocol stack, the reactor, the TLS configuration and the database layer are all part of the same static library, and the result is one binary with no runtime to install beside it.</p><p>The name is an argument as much as an acronym. Writing a web service in C is usually treated as a mistake by default; CWIST exists to make the ordinary version of that job (routing, TLS, a database, metrics, a health endpoint) as short to write as it is in any other ecosystem.</p><h2>Two server modes, and why both exist</h2><p>CWIST ships two request paths tuned for opposite things, selected with one environment variable.</p><p>The <strong>CWIST reactor</strong> is the default. It multiplexes many connections per event loop, so connection count is decoupled from thread count and a connection costs a reactor slot rather than a parked thread. It is the mode to pick when the number of open connections is the thing that grows.</p><p>The <strong>classic pool</strong> is thread-per-connection, enabled with <code>CWIST_C1M_MODE=0</code>. Every connection gets its own thread, so no request waits behind another in a batch. In our published runs it leads through the median and p99; the crossover against the async comparison happens at the extreme tail.</p><p>We publish the whole distribution rather than an average, because an average hides which requests were slow. The numbers come from one commit, one load profile and one CI environment, and the runner CPU model moves them more than most code changes do. Read them as a shape, not a guarantee.</p><h2>Where it fits</h2><p>CWIST is a reasonable choice when you already have C in the picture: an embedded system that grew an API, a numerical or media service whose core is C and whose HTTP layer should not double the deployment, or a service where the operators want to read every layer they are on call for. It is a poor choice if what you actually want is a large library ecosystem for business logic.</p><h2>Installing</h2><p>CWIST vendors its dependencies, so a clone and <code>make</code> is usually enough. There is also a Homebrew tap for macOS and Linuxbrew. The getting-started guide walks through both, then builds a first server.</p>
       </div>
       <div>
         <span class="code-label">main.c</span>
@@ -66,6 +66,11 @@ int main(void) {
         <div class="card">
           <h3>At a glance</h3>
           <p>C17 library and application server. Vendors BoringSSL, lsquic, libttak and SQLite3, so a plain build works on a fresh Linux, macOS or BSD machine. Installable from source or from the Homebrew tap.</p>
+          <dl class="facts">
+            <dt>Licence</dt><dd>MIT</dd>
+            <dt>Standard</dt><dd>C17</dd>
+          </dl>
+          <p class="fineprint">Vendored dependencies keep their own terms; see NOTICE.md in the repository before distributing a linked binary.</p>
           <a class="more" href="https://github.com/c4punks/CWIST" rel="noopener">Open the repository &rarr;</a>
         </div>
       </div>
@@ -183,8 +188,8 @@ int main(void) {
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
-      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+      <span>&copy; 2026 C 4 Punk Developers. CWIST is MIT, libttak is BSD 3-Clause.</span>
+      <span>Rendered by CWIST on WASI 0.2. No JavaScript on this site.</span>
     </div>
   </div>
 </footer>

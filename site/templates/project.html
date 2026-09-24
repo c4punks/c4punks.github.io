@@ -10,6 +10,11 @@
         <div class="card">
           <h3>At a glance</h3>
           <p>{{ glance }}</p>
+          <dl class="facts">
+            <dt>Licence</dt><dd>{{ licence }}</dd>
+            <dt>Standard</dt><dd>{{ tag }}</dd>
+          </dl>
+          <p class="fineprint">{{ licence_note }}</p>
           <a class="more" href="{{ repo }}" rel="noopener">Open the repository &rarr;</a>
         </div>
       </div>

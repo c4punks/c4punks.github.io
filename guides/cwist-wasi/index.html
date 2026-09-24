@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Running CWIST on WASI 0.2 — C 4 Punk Developers</title>
+<title>Running CWIST on WASI 0.2 | C 4 Punk Developers</title>
 <meta name="description" content="Compile a CWIST server to wasm32-wasip2 and serve it under wasmtime, with the guest owning its own accept loop.">
 <link rel="canonical" href="https://c4punks.github.io/guides/cwist-wasi/">
 <meta property="og:site_name" content="C 4 Punk Developers">
-<meta property="og:title" content="Running CWIST on WASI 0.2 — C 4 Punk Developers">
+<meta property="og:title" content="Running CWIST on WASI 0.2 | C 4 Punk Developers">
 <meta property="og:description" content="Compile a CWIST server to wasm32-wasip2 and serve it under wasmtime, with the guest owning its own accept loop.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/guides/cwist-wasi/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.85ed2af02fa2b9b1.css">
+<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -53,7 +53,7 @@
                     "text/css; charset=utf-8");
 
 const char *url = cwist_app_asset_url(app, "css/app.css");
-/* -&gt; /assets/css/app.&lt;hash&gt;.css, immutable for a year */</code></pre><p>Changing the bytes changes the URL, so a cache never serves a stale copy and an unchanged file keeps its URL across restarts. Register assets before <code>cwist_app_listen()</code>.</p><h2>Summary</h2><p>A CWIST server compiles to a WASI 0.2 component with no source changes, keeps its own accept loop, and runs under a capability list you control. Anything it needs from the outside world &mdash; sockets, files, environment, clock &mdash; is something you granted on the command line.</p>
+/* -&gt; /assets/css/app.&lt;hash&gt;.css, immutable for a year */</code></pre><p>Changing the bytes changes the URL, so a cache never serves a stale copy and an unchanged file keeps its URL across restarts. Register assets before <code>cwist_app_listen()</code>.</p><h2>Summary</h2><p>A CWIST server compiles to a WASI 0.2 component with no source changes, keeps its own accept loop, and runs under a capability list you control. Anything it needs from the outside world (sockets, files, environment, clock) is something you granted on the command line.</p>
     </article>
   </div>
 </section>
@@ -121,8 +121,8 @@ const char *url = cwist_app_asset_url(app, "css/app.css");
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
-      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+      <span>&copy; 2026 C 4 Punk Developers. CWIST is MIT, libttak is BSD 3-Clause.</span>
+      <span>Rendered by CWIST on WASI 0.2. No JavaScript on this site.</span>
     </div>
   </div>
 </footer>

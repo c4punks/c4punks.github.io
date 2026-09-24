@@ -45,6 +45,8 @@ typedef struct {
     const char *tagline;
     const char *summary;
     const char *repo;
+    const char *licence;
+    const char *licence_note;
     const char *bullets_html;
     const char *code_label;
     const char *code;
@@ -70,10 +72,10 @@ typedef struct {
 /* -------------------------------------------------------------------------- */
 
 static const stat_t g_stats[] = {
-    { "2",          "flagship projects" },
-    { "C17",        "language standard" },
-    { "Apache-2.0", "default licence" },
-    { "0",          "runtime dependencies" }
+    { "2",           "flagship projects" },
+    { "C17",         "language standard" },
+    { "MIT + BSD-3", "project licences" },
+    { "8",           "dependencies vendored" }
 };
 
 static const feature_t g_principles[] = {
@@ -132,7 +134,7 @@ static const char g_about_html[] =
     "written down and applied to ourselves first.</p>"
     "<p>We are not claiming C is the right choice for every project. We are "
     "claiming that if you have decided to write C, the surrounding ecosystem "
-    "should be as good as anyone else's &mdash; a framework that routes and "
+    "should be as good as anyone else's: a framework that routes and "
     "speaks modern protocols, a runtime that makes memory behaviour explicit, "
     "and documentation that reads like it was written for a person.</p>"
 
@@ -140,14 +142,14 @@ static const char g_about_html[] =
     "<p><strong>CWIST</strong> is a web framework and application server. It "
     "speaks HTTP/1.1, HTTP/2 and HTTP/3 over QUIC, plus WebSocket and "
     "WebTransport, with hybrid post-quantum TLS and an embedded SQLite ORM. It "
-    "ships two request paths &mdash; a multiplexing reactor and a "
-    "thread-per-connection pool &mdash; because those two shapes fail differently "
+    "ships two request paths, a multiplexing reactor and a "
+    "thread-per-connection pool, because those two shapes fail differently "
     "under load and the right answer depends on the workload.</p>"
     "<p><strong>libttak</strong> is the deterministic systems runtime underneath "
     "it: generational arenas, epoch-based reclamation, detachable ownership, "
     "thread pools, a lattice scheduler and zero-copy IO. It exists because the "
-    "usual C failure modes at scale &mdash; heap fragmentation, allocator "
-    "contention, unstable tails &mdash; are not independent problems, and treating "
+    "usual C failure modes at scale (heap fragmentation, allocator "
+    "contention, unstable tails) are not independent problems, and treating "
     "them as one system produces better behaviour than patching each in isolation.</p>"
 
     "<h2>How decisions get made</h2>"
@@ -157,10 +159,31 @@ static const char g_about_html[] =
     "is no separate committee and no closed mailing list.</p>"
 
     "<h2>Licensing</h2>"
-    "<p>Our code is Apache-2.0 unless a repository states otherwise; each "
-    "repository carries its own <code>LICENSE</code> and, where third-party code "
-    "is vendored, a <code>NOTICE</code> naming it. Check the repository you are "
-    "about to depend on rather than trusting this paragraph.</p>"
+    "<p>Every repository carries its own <code>LICENSE</code> file, and that "
+    "file is the authoritative text. This table is a convenience, not a "
+    "warranty; check the repository you are about to depend on.</p>"
+    "<table>"
+    "<thead><tr><th>Repository</th><th>Licence</th><th>Copyright</th></tr></thead>"
+    "<tbody>"
+    "<tr><td>CWIST</td><td>MIT</td><td>2026 CWIST contributors</td></tr>"
+    "<tr><td>libttak</td><td>BSD 3-Clause</td><td>2026 Religiya Serdtsa</td></tr>"
+    "<tr><td>c4punks.github.io</td><td>MIT</td><td>2026 " SITE_ORG "</td></tr>"
+    "</tbody>"
+    "</table>"
+    "<p>CWIST vendors its dependencies, and each one keeps its own terms. "
+    "BoringSSL and cnats are Apache-2.0. lsquic, cJSON and multipart-parser-c "
+    "are MIT, with some proto-quic-derived parts of lsquic under BSD-3-Clause. "
+    "libttak and uriparser are BSD-3-Clause. SQLite is public domain. "
+    "<code>NOTICE.md</code> in the CWIST repository lists all of them with "
+    "their paths.</p>"
+    "<p>Static linking is the part people miss. When you distribute "
+    "<code>libcwist.a</code>, or a binary linked against it, the obligations of "
+    "every component in that linked set travel with it: the Apache-2.0 patent "
+    "grant and NOTICE terms, and the attribution clauses of the BSD-licensed "
+    "components. Review the set before you ship rather than after.</p>"
+    "<p>Contributions are accepted under the licence of the repository you are "
+    "contributing to. We do not ask for a copyright assignment or a separate "
+    "contributor licence agreement.</p>"
 
     "<h2>Talking to us</h2>"
     "<p>Bug reports and questions belong in the issue tracker of the relevant "
@@ -171,8 +194,8 @@ static const char g_about_html[] =
 static const char g_contribute_html[] =
     "<h2>You do not need permission</h2>"
     "<p>Fork the repository, make the change, open a pull request. If you want to "
-    "check the direction first, open an issue and say what you intend to do &mdash; "
-    "that is a courtesy, not a gate.</p>"
+    "check the direction first, open an issue and say what you intend to do. "
+    "That is a courtesy, not a gate.</p>"
 
     "<h2>Good first contributions</h2>"
     "<ul>"
@@ -202,7 +225,7 @@ static const char g_contribute_html[] =
     "indentation, no tabs, braces on the same line, <code>snake_case</code> for "
     "functions and types, a <code>cwist_</code> or <code>ttak_</code> prefix on "
     "anything exported. Public headers carry Doxygen comments describing "
-    "ownership and failure modes &mdash; who frees the pointer is part of the "
+    "ownership and failure modes. Who frees the pointer is part of the "
     "API, so write it down.</p>"
 
     "<h2>Review expectations</h2>"
@@ -210,6 +233,14 @@ static const char g_contribute_html[] =
     "engineer could follow the code under pressure. Expect questions about "
     "lifetimes. Expect to be asked for a measurement if you claim something is "
     "faster. None of that is personal.</p>"
+
+    "<h2>Licensing your contribution</h2>"
+    "<p>Whatever you send is accepted under the licence already on that "
+    "repository: MIT for CWIST and for this site, BSD 3-Clause for libttak. "
+    "There is no copyright assignment and no separate contributor licence "
+    "agreement to sign. If you are adding third-party code, say so in the pull "
+    "request and name its licence, because vendoring it changes what downstream "
+    "users have to comply with.</p>"
 
     "<h2>Code of conduct</h2>"
     "<p>Be direct about code and decent about people. Harassment, and using the "

@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Contribute — C 4 Punk Developers</title>
+<title>Contribute | C 4 Punk Developers</title>
 <meta name="description" content="How to contribute to the open-source projects maintained by C 4 Punk Developers.">
 <link rel="canonical" href="https://c4punks.github.io/contribute/">
 <meta property="og:site_name" content="C 4 Punk Developers">
-<meta property="og:title" content="Contribute — C 4 Punk Developers">
+<meta property="og:title" content="Contribute | C 4 Punk Developers">
 <meta property="og:description" content="How to contribute to the open-source projects maintained by C 4 Punk Developers.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://c4punks.github.io/contribute/">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="/assets/css/app.85ed2af02fa2b9b1.css">
+<link rel="stylesheet" href="/assets/css/app.2201977646237fed.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c1003f'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='16' font-weight='800' fill='%23fff' text-anchor='middle'%3EC4%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -41,9 +41,15 @@
 </section>
 <section class="section">
   <div class="wrap">
-    <article class="prose">
-      <h2>You do not need permission</h2><p>Fork the repository, make the change, open a pull request. If you want to check the direction first, open an issue and say what you intend to do &mdash; that is a courtesy, not a gate.</p><h2>Good first contributions</h2><ul><li><strong>Reproduce a benchmark.</strong> Run one of our published numbers on your own hardware and tell us what you got. Divergence is information.</li><li><strong>Documentation that unblocked you.</strong> If you had to read the source to work something out, that is a documentation bug; write down what you learned.</li><li><strong>Platform reports.</strong> Build on a BSD, an older glibc, a musl container, an Apple Silicon Mac, and tell us what broke.</li><li><strong>Hard bug reports.</strong> A crash with a reproducer is worth more to us than a feature request.</li></ul><h2>What a pull request should contain</h2><ol><li>A description of the problem, not only the fix. Reviewers need to be able to disagree with the framing.</li><li>A test, or an explanation of why the change is not testable.</li><li>For performance work: before and after numbers, the command used, and the machine they were taken on.</li><li>Commit messages in English, imperative mood, one logical change each.</li></ol><h2>Code style</h2><p>Follow the file you are editing. Across the organisation: C17, four-space indentation, no tabs, braces on the same line, <code>snake_case</code> for functions and types, a <code>cwist_</code> or <code>ttak_</code> prefix on anything exported. Public headers carry Doxygen comments describing ownership and failure modes &mdash; who frees the pointer is part of the API, so write it down.</p><h2>Review expectations</h2><p>We review for correctness, ownership clarity, and whether an on-call engineer could follow the code under pressure. Expect questions about lifetimes. Expect to be asked for a measurement if you claim something is faster. None of that is personal.</p><h2>Code of conduct</h2><p>Be direct about code and decent about people. Harassment, and using the issue tracker to litigate something other than the software, will get you removed. Maintainers make that call.</p>
-    </article>
+    <div class="doclayout">
+      <aside class="docaside">
+        <nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ol><li><a href="#you-do-not-need-permission">You do not need permission</a></li><li><a href="#good-first-contributions">Good first contributions</a></li><li><a href="#what-a-pull-request-should-contain">What a pull request should contain</a></li><li><a href="#code-style">Code style</a></li><li><a href="#review-expectations">Review expectations</a></li><li><a href="#licensing-your-contribution">Licensing your contribution</a></li><li><a href="#code-of-conduct">Code of conduct</a></li></ol></nav>
+        <div class="asidecard"><h4>Elsewhere</h4><ul><li><a href="https://github.com/c4punks" rel="noopener">GitHub org</a></li><li><a href="https://discord.gg/6F8HDmNAPg" rel="noopener">Discord</a></li><li><a href="/projects/">Projects</a></li></ul></div>
+      </aside>
+      <article class="prose">
+        <h2 id="you-do-not-need-permission">You do not need permission</h2><p>Fork the repository, make the change, open a pull request. If you want to check the direction first, open an issue and say what you intend to do. That is a courtesy, not a gate.</p><h2 id="good-first-contributions">Good first contributions</h2><ul><li><strong>Reproduce a benchmark.</strong> Run one of our published numbers on your own hardware and tell us what you got. Divergence is information.</li><li><strong>Documentation that unblocked you.</strong> If you had to read the source to work something out, that is a documentation bug; write down what you learned.</li><li><strong>Platform reports.</strong> Build on a BSD, an older glibc, a musl container, an Apple Silicon Mac, and tell us what broke.</li><li><strong>Hard bug reports.</strong> A crash with a reproducer is worth more to us than a feature request.</li></ul><h2 id="what-a-pull-request-should-contain">What a pull request should contain</h2><ol><li>A description of the problem, not only the fix. Reviewers need to be able to disagree with the framing.</li><li>A test, or an explanation of why the change is not testable.</li><li>For performance work: before and after numbers, the command used, and the machine they were taken on.</li><li>Commit messages in English, imperative mood, one logical change each.</li></ol><h2 id="code-style">Code style</h2><p>Follow the file you are editing. Across the organisation: C17, four-space indentation, no tabs, braces on the same line, <code>snake_case</code> for functions and types, a <code>cwist_</code> or <code>ttak_</code> prefix on anything exported. Public headers carry Doxygen comments describing ownership and failure modes. Who frees the pointer is part of the API, so write it down.</p><h2 id="review-expectations">Review expectations</h2><p>We review for correctness, ownership clarity, and whether an on-call engineer could follow the code under pressure. Expect questions about lifetimes. Expect to be asked for a measurement if you claim something is faster. None of that is personal.</p><h2 id="licensing-your-contribution">Licensing your contribution</h2><p>Whatever you send is accepted under the licence already on that repository: MIT for CWIST and for this site, BSD 3-Clause for libttak. There is no copyright assignment and no separate contributor licence agreement to sign. If you are adding third-party code, say so in the pull request and name its licence, because vendoring it changes what downstream users have to comply with.</p><h2 id="code-of-conduct">Code of conduct</h2><p>Be direct about code and decent about people. Harassment, and using the issue tracker to litigate something other than the software, will get you removed. Maintainers make that call.</p>
+      </article>
+    </div>
   </div>
 </section>
 
@@ -81,8 +87,8 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 C 4 Punk Developers. Code under Apache-2.0 unless a repository states otherwise.</span>
-      <span>Rendered by CWIST on WASI 0.2 &mdash; no JavaScript on this site.</span>
+      <span>&copy; 2026 C 4 Punk Developers. CWIST is MIT, libttak is BSD 3-Clause.</span>
+      <span>Rendered by CWIST on WASI 0.2. No JavaScript on this site.</span>
     </div>
   </div>
 </footer>

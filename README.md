@@ -1,6 +1,6 @@
 # c4punks.github.io
 
-The organisation site for **C 4 Punk Developers** — who we are, what we
+The organisation site for **C 4 Punk Developers**: who we are, what we
 maintain, and how to work with us.
 
 Live at <https://c4punks.github.io>.
@@ -33,8 +33,8 @@ site/
 
 `site/templates.h` and `site/site.wasm` are generated and not committed.
 
-Everything published at the repository root — `index.html`, `projects/`,
-`guides/`, `about/`, `contribute/`, `search/`, `sitemap.xml` — is output from
+Everything published at the repository root (`index.html`, `projects/`,
+`guides/`, `about/`, `contribute/`, `search/` and `sitemap.xml`) is output from
 `make export`. Edit the sources in `site/`, not the generated HTML.
 
 ## Building
@@ -60,5 +60,9 @@ page listing, the sitemap and the search index all pick it up automatically.
 
 ## Licence
 
-Content and code in this repository are Apache-2.0, matching the rest of the
-organisation.
+The content and code in this repository are MIT, matching CWIST. See
+[`LICENSE`](LICENSE).
+
+The projects this site describes are licensed separately: CWIST is MIT,
+libttak is BSD 3-Clause, and CWIST's vendored dependencies keep their own
+terms. Each repository's own `LICENSE` file is the authoritative text.

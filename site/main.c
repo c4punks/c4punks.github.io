@@ -99,6 +99,76 @@ static void html_escape(const char *src, char *dst, size_t cap) {
     dst[o] = '\0';
 }
 
+/** @brief Turn heading text into an anchor id: lowercase, hyphens, ASCII only. */
+static void slugify(const char *src, char *dst, size_t cap) {
+    size_t o = 0;
+    bool dash = false;
+    for (const char *p = src; *p && o + 1 < cap; p++) {
+        unsigned char c = (unsigned char)*p;
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            dst[o++] = (char)c; dash = false;
+        } else if (c >= 'A' && c <= 'Z') {
+            dst[o++] = (char)(c - 'A' + 'a'); dash = false;
+        } else if (!dash && o > 0) {
+            dst[o++] = '-'; dash = true;
+        }
+    }
+    while (o > 0 && dst[o - 1] == '-') o--;
+    dst[o] = '\0';
+}
+
+/**
+ * @brief Give every <h2> in @p html an id and collect a table of contents.
+ *
+ * @param html Prose body to rewrite.
+ * @param toc_out Receives the rendered table of contents, or stays empty when
+ *                the body has no headings.
+ * @return The rewritten body. The caller owns both strings.
+ */
+static cwist_sstring *anchor_headings(const char *html, cwist_sstring *toc_out) {
+    cwist_sstring *body = cwist_sstring_create();
+    cwist_sstring *items = cwist_sstring_create();
+    int count = 0;
+
+    const char *p = html;
+    while (*p) {
+        const char *open_tag = strstr(p, "<h2>");
+        if (!open_tag) break;
+        const char *close_tag = strstr(open_tag, "</h2>");
+        if (!close_tag) break;
+
+        cwist_sstring_append_len(body, p, (size_t)(open_tag - p));
+
+        const char *text = open_tag + 4;
+        size_t text_len = (size_t)(close_tag - text);
+        char heading[256];
+        if (text_len >= sizeof(heading)) text_len = sizeof(heading) - 1;
+        memcpy(heading, text, text_len);
+        heading[text_len] = '\0';
+
+        char plain[256], slug[128];
+        strip_markup(heading, plain, sizeof(plain));
+        slugify(plain, slug, sizeof(slug));
+
+        s_appendf(body, "<h2 id=\"%s\">%s</h2>", slug, heading);
+        s_appendf(items, "<li><a href=\"#%s\">%s</a></li>", slug, heading);
+        count++;
+
+        p = close_tag + 5;
+    }
+    cwist_sstring_append(body, p);
+
+    if (count > 0) {
+        cwist_sstring_append(toc_out,
+            "<nav class=\"toc\" aria-label=\"On this page\">"
+            "<p class=\"toc-title\">On this page</p><ol>");
+        cwist_sstring_append(toc_out, items->data);
+        cwist_sstring_append(toc_out, "</ol></nav>");
+    }
+    cwist_sstring_destroy(items);
+    return body;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Shared template context                                                    */
 /* -------------------------------------------------------------------------- */
@@ -184,6 +254,7 @@ static cJSON *projects_json(void) {
         cJSON_AddStringToObject(o, "bullets_html", p->bullets_html);
         cJSON_AddStringToObject(o, "href", href);
         cJSON_AddStringToObject(o, "repo", p->repo);
+        cJSON_AddStringToObject(o, "licence", p->licence);
         cJSON_AddItemToArray(arr, o);
     }
     return arr;
@@ -251,7 +322,7 @@ static cwist_sstring *page_home(void) {
     if (!body) return NULL;
 
     cwist_sstring *page = render_layout(
-        SITE_ORG " — open-source systems software in C",
+        SITE_ORG " | open-source systems software in C",
         "C 4 Punk Developers is an independent open-source group building "
         "systems software in C: CWIST, a web framework and application server, "
         "and libttak, a deterministic systems runtime.",
@@ -288,7 +359,7 @@ static cwist_sstring *page_projects(void) {
     cwist_sstring_append(content, body->data);
 
     cwist_sstring *page = render_layout(
-        "Projects — " SITE_ORG,
+        "Projects | " SITE_ORG,
         "The open-source projects maintained by C 4 Punk Developers: CWIST, "
         "libttak, and the supporting repositories around them.",
         "/projects/", "/projects/", content->data);
@@ -306,7 +377,7 @@ static cwist_sstring *page_project(const project_t *p) {
         "<div class=\"links\"><a href=\"%s\" rel=\"noopener\">Repository &rarr;</a>"
         "<a href=\"/guides/\">Guides &rarr;</a>"
         "<a href=\"/contribute/\">Contribute &rarr;</a></div>", p->repo);
-    snprintf(title, sizeof(title), "%s — %s", p->name, SITE_ORG);
+    snprintf(title, sizeof(title), "%s | %s", p->name, SITE_ORG);
     snprintf(desc, sizeof(desc), "%s. %s", p->tagline, p->summary);
 
     cJSON *ctx = base_context("/projects/");
@@ -316,6 +387,9 @@ static cwist_sstring *page_project(const project_t *p) {
     cJSON_AddStringToObject(ctx, "code_label", p->code_label);
     cJSON_AddStringToObject(ctx, "glance", p->glance);
     cJSON_AddStringToObject(ctx, "repo", p->repo);
+    cJSON_AddStringToObject(ctx, "tag", p->tag);
+    cJSON_AddStringToObject(ctx, "licence", p->licence);
+    cJSON_AddStringToObject(ctx, "licence_note", p->licence_note);
     cJSON_AddItemToObject(ctx, "features", features_json(p->features, p->feature_count));
     cJSON_AddItemToObject(ctx, "guides", guides_json(p->name, NULL));
 
@@ -355,7 +429,7 @@ static cwist_sstring *page_guides(void) {
     cwist_sstring_append(content, body->data);
 
     cwist_sstring *page = render_layout(
-        "Guides — " SITE_ORG,
+        "Guides | " SITE_ORG,
         "Step-by-step guides to CWIST and libttak from C 4 Punk Developers.",
         "/guides/", "/guides/", content->data);
 
@@ -368,7 +442,7 @@ static cwist_sstring *page_guides(void) {
 static cwist_sstring *page_guide(const guide_t *g) {
     char canonical[128], title[256], sub[512];
     snprintf(canonical, sizeof(canonical), "/guides/%s/", g->slug);
-    snprintf(title, sizeof(title), "%s — " SITE_ORG, g->title);
+    snprintf(title, sizeof(title), "%s | " SITE_ORG, g->title);
     snprintf(sub, sizeof(sub), "%s", g->summary);
 
     char kicker[128];
@@ -397,15 +471,27 @@ static cwist_sstring *page_guide(const guide_t *g) {
     return page;
 }
 
-/** @brief Render a prose page (about, contribute) from a stored HTML body. */
+/** @brief Render a prose page (about, contribute) with a sticky contents rail. */
 static cwist_sstring *page_prose(const char *kicker, const char *heading,
                                  const char *sub, const char *canonical,
                                  const char *title, const char *desc,
                                  const char *body_html) {
+    cwist_sstring *toc = cwist_sstring_create();
+    cwist_sstring *anchored = anchor_headings(body_html, toc);
+
     cJSON *ctx = base_context(canonical);
-    cJSON_AddStringToObject(ctx, "body_html", body_html);
+    cJSON_AddStringToObject(ctx, "body_html", anchored->data);
+    cJSON_AddStringToObject(ctx, "toc_html", toc->data);
+    cJSON_AddStringToObject(ctx, "aside_html",
+        "<div class=\"asidecard\"><h4>Elsewhere</h4><ul>"
+        "<li><a href=\"" SITE_GITHUB "\" rel=\"noopener\">GitHub org</a></li>"
+        "<li><a href=\"" SITE_DISCORD "\" rel=\"noopener\">Discord</a></li>"
+        "<li><a href=\"/projects/\">Projects</a></li>"
+        "</ul></div>");
 
     cwist_sstring *body = cwist_template_render(TPL_PROSE_HTML, ctx);
+    cwist_sstring_destroy(anchored);
+    cwist_sstring_destroy(toc);
     cJSON_Delete(ctx);
     if (!body) return NULL;
 
@@ -471,8 +557,8 @@ static int build_index(void) {
         const project_t *p = &g_projects[i];
         char body[32768], stripped[32768];
         strip_markup(p->body_html, stripped, sizeof(stripped));
-        snprintf(body, sizeof(body), "%s %s %s %s",
-                 p->tagline, p->summary, p->search_text, stripped);
+        snprintf(body, sizeof(body), "%s %s licence %s %s %s",
+                 p->tagline, p->summary, p->licence, p->search_text, stripped);
 
         sql_quote(p->name, q_title, sizeof(q_title));
         sql_quote(body, q_body, sizeof(q_body));
@@ -516,7 +602,7 @@ static cwist_sstring *search_results(const char *q) {
         stmt = sql;
     } else {
         cwist_sstring_append(out,
-            "<p style=\"color:var(--muted);margin:0 0 20px\">Everything this site "
+            "<p class=\"note\">Everything this site "
             "publishes, in one list. Type above to filter it.</p>");
     }
 
@@ -542,7 +628,7 @@ static cwist_sstring *search_results(const char *q) {
     if (q && *q) {
         char esc[512];
         html_escape(q, esc, sizeof(esc));
-        s_appendf(out, "<p style=\"color:var(--muted);margin:0 0 20px\">"
+        s_appendf(out, "<p class=\"note\">"
                        "%d result%s for <strong>%s</strong>.</p>",
                   n, n == 1 ? "" : "s", esc);
     }
@@ -558,7 +644,7 @@ static cwist_sstring *search_results(const char *q) {
         char snippet[260] = {0};
         if (body) {
             snprintf(snippet, sizeof(snippet), "%.230s", body);
-            if (strlen(body) > 230) strcat(snippet, "…");
+            if (strlen(body) > 230) strcat(snippet, "...");
         }
         char e_title[512], e_snippet[1024];
         html_escape(title ? title : "", e_title, sizeof(e_title));
@@ -602,7 +688,7 @@ static cwist_sstring *page_search(const char *q, bool live) {
     cwist_sstring_append(content, head ? head->data : "");
     cwist_sstring_append(content, body->data);
 
-    cwist_sstring *page = render_layout("Search — " SITE_ORG,
+    cwist_sstring *page = render_layout("Search | " SITE_ORG,
         "Search the C 4 Punk Developers site.", "/search/", "/search/",
         content->data);
 
@@ -698,7 +784,7 @@ static void h_project(cwist_http_request *req, cwist_http_response *res) {
     cwist_sstring *content = cwist_sstring_create();
     cwist_sstring_append(content, head ? head->data : "");
     cwist_sstring_append(content, body ? body->data : "");
-    send_page(res, render_layout("Not found — " SITE_ORG, "Page not found.",
+    send_page(res, render_layout("Not found | " SITE_ORG, "Page not found.",
                                  "/projects/", "/projects/", content->data),
               CWIST_HTTP_NOT_FOUND);
     cwist_sstring_destroy(content);
@@ -725,7 +811,7 @@ static void h_guide(cwist_http_request *req, cwist_http_response *res) {
     cwist_sstring *content = cwist_sstring_create();
     cwist_sstring_append(content, head ? head->data : "");
     cwist_sstring_append(content, body ? body->data : "");
-    send_page(res, render_layout("Not found — " SITE_ORG, "Page not found.",
+    send_page(res, render_layout("Not found | " SITE_ORG, "Page not found.",
                                  "/guides/", "/guides/", content->data),
               CWIST_HTTP_NOT_FOUND);
     cwist_sstring_destroy(content);
@@ -737,7 +823,7 @@ static void h_about(cwist_http_request *req, cwist_http_response *res) {
     (void)req;
     send_page(res, page_prose("About", "An independent group writing C",
         "Who we are, why we still write C, and how decisions get made.",
-        "/about/", "About — " SITE_ORG,
+        "/about/", "About | " SITE_ORG,
         "About C 4 Punk Developers: an independent open-source group building "
         "systems software in C.", g_about_html), CWIST_HTTP_OK);
 }
@@ -747,7 +833,7 @@ static void h_contribute(cwist_http_request *req, cwist_http_response *res) {
     send_page(res, page_prose("Contribute", "Send the patch",
         "What a good contribution looks like, how review works, and what we "
         "expect from each other.",
-        "/contribute/", "Contribute — " SITE_ORG,
+        "/contribute/", "Contribute | " SITE_ORG,
         "How to contribute to the open-source projects maintained by "
         "C 4 Punk Developers.", g_contribute_html), CWIST_HTTP_OK);
 }
@@ -822,7 +908,7 @@ static int export_site(cwist_app *app, const char *root) {
     rc |= export_page(root, "about/index.html",
         page_prose("About", "An independent group writing C",
             "Who we are, why we still write C, and how decisions get made.",
-            "/about/", "About — " SITE_ORG,
+            "/about/", "About | " SITE_ORG,
             "About C 4 Punk Developers: an independent open-source group "
             "building systems software in C.", g_about_html));
 
@@ -830,7 +916,7 @@ static int export_site(cwist_app *app, const char *root) {
         page_prose("Contribute", "Send the patch",
             "What a good contribution looks like, how review works, and what we "
             "expect from each other.",
-            "/contribute/", "Contribute — " SITE_ORG,
+            "/contribute/", "Contribute | " SITE_ORG,
             "How to contribute to the open-source projects maintained by "
             "C 4 Punk Developers.", g_contribute_html));
 

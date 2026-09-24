@@ -97,6 +97,9 @@ static const project_t g_projects[] = {
         "modern protocols itself, embeds a database layer, and links statically "
         "into a single binary you can copy onto a machine.",
         "https://github.com/c4punks/CWIST",
+        "MIT",
+        "Vendored dependencies keep their own terms; see NOTICE.md in the "
+        "repository before distributing a linked binary.",
         "<li>HTTP/1.1, HTTP/2, HTTP/3 (QUIC), WebSocket, WebTransport</li>"
         "<li>Hybrid post-quantum TLS (X25519MLKEM768)</li>"
         "<li>Embedded SQLite ORM, plus RDBMS auto-detection</li>"
@@ -116,8 +119,8 @@ static const project_t g_projects[] = {
         "to install beside it.</p>"
         "<p>The name is an argument as much as an acronym. Writing a web service "
         "in C is usually treated as a mistake by default; CWIST exists to make "
-        "the ordinary version of that job &mdash; routing, TLS, a database, "
-        "metrics, a health endpoint &mdash; as short to write as it is in any "
+        "the ordinary version of that job (routing, TLS, a database, "
+        "metrics, a health endpoint) as short to write as it is in any "
         "other ecosystem.</p>"
 
         "<h2>Two server modes, and why both exist</h2>"
@@ -167,6 +170,9 @@ static const project_t g_projects[] = {
         "high-throughput concurrency and deterministic resource scheduling. It is "
         "what CWIST stands on, and it is usable on its own.",
         "https://github.com/c4punks/libttak",
+        "BSD 3-Clause",
+        "Copyright 2026 Religiya Serdtsa. The attribution clause applies to "
+        "binary redistribution as well as source.",
         "<li>Generational arenas with bulk reclamation</li>"
         "<li>Epoch-based reclamation without global pauses</li>"
         "<li>Detachable memory ownership</li>"
@@ -211,7 +217,7 @@ static const project_t g_projects[] = {
         "is the whole budget.</p>"
 
         "<h2>What is built on it</h2>"
-        "<p>libttak powers custom web frameworks &mdash; including CWIST &mdash; "
+        "<p>libttak powers custom web frameworks, including CWIST, along with "
         "network routing layers, lock-free ingress pipelines, containerised "
         "services and experimental overlay networking. It is a library, not a "
         "framework: you call it from your own <code>main</code>.</p>",
