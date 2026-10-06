@@ -152,7 +152,8 @@ static const project_t g_projects[] = {
 
         "<h2>Installing</h2>"
         "<p>CWIST vendors its dependencies, so a clone and <code>make</code> is "
-        "usually enough. There is also a Homebrew tap for macOS and Linuxbrew. "
+        "usually enough. There is also a Homebrew tap for macOS and Linuxbrew "
+        "(<code>brew tap c4punks/cwist && brew install cwist</code>) providing the v3.9 release. "
         "The getting-started guide walks through both, then builds a first "
         "server.</p>",
         g_cwist_features,
