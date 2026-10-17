@@ -25,6 +25,10 @@ LDFLAGS = -lwasi-emulated-pthread -lwasi-emulated-getpid \
 	-Wl,--gc-sections -Wl,--allow-undefined \
 	-Wl,-z,stack-size=4194304
 
+# The wasip2 link step shells out to a `wasm-opt` found in PATH, but Binaryen
+# cannot parse component binaries; keep the link PATH free of any wasm-opt.
+LINK_PATH = $(WASI_SDK)/bin:/usr/local/bin
+
 .PHONY: all run export clean
 
 all: site.wasm
@@ -37,7 +41,7 @@ fonts.h: $(FONTS) tools/embed_bin.sh
 	./tools/embed_bin.sh $@ $(FONTS)
 
 site.wasm: main.c content.h projects.h guides.h highlight.h templates.h fonts.h Makefile
-	$(WASI_SDK)/bin/clang $(CFLAGS) -o $@ main.c $(ARCHIVE) $(LDFLAGS)
+	PATH='$(LINK_PATH)' $(WASI_SDK)/bin/clang $(CFLAGS) -o $@ main.c $(ARCHIVE) $(LDFLAGS)
 
 run: site.wasm
 	$(WASMTIME) run -S preview2=y -S tcp=y -S inherit-network=y site.wasm
