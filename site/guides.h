@@ -37,7 +37,7 @@ static const guide_t g_guides[] = {
         "cd CWIST\n"
         "make\n"
         "sudo make install   # optional; PREFIX=/opt/cwist to relocate</code></pre>"
-        "<p>Or install the released v4.1.2 build through Homebrew, on macOS or "
+        "<p>Or install the released v4.2.3 build through Homebrew, on macOS or "
         "Linuxbrew:</p>"
         "<pre><code class=\"lang-sh\">brew tap c4punks/cwist\n"
         "brew install cwist</code></pre>"
